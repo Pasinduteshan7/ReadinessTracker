@@ -1,161 +1,272 @@
-# Frontend-only Mock Backend (development)
+# ReadinessTracker - Real-Time Employability Readiness Tracker
 
-This project has been configured to run entirely in the browser for local development using a small in-memory mock backend.
+**Real-Time Employability Readiness Tracker for Computer Engineering Undergraduates**
 
-Why we did this
-- Avoid needing hosted backend environment variables, service keys, or confirmed emails while developing the frontend UI.
-- Let developers iterate quickly on pages and flows without network dependencies.
+A full-stack web application built with React + TypeScript + Vite (frontend) and Spring Boot + MySQL (backend) to help Computer Engineering students track their employability readiness and career development.
 
-What the mock provides
-- `src/lib/backendMock.ts` — an in-memory shim that implements the minimal backend API the app uses:
-  - auth helpers: getUser(), signInWithPassword({email, password}), signUp({email, password}), signOut()
-  - onAuthStateChange(callback) (returns a subscription with unsubscribe())
-  - simple table queries via from(table) with select, eq, in, maybeSingle, single, insert and head/count support
-- `src/lib/mockSeed.ts` — dev-only seeder that preloads test student/advisor/admin profiles and a few readiness scores. It is dynamically imported at startup in development (`src/main.tsx`).
+---
 
-How to use locally
-1. Install dependencies and start the dev server (PowerShell):
+## 🚀 **TECH STACK**
 
-```powershell
-cd "d:\PROJECTS\Rediness tracker\project"
+### **Frontend**
+- React 18 + TypeScript
+- Vite (fast build tool)
+- Tailwind CSS (styling)
+- Lucide Icons (UI icons)
+- Axios (API client)
+
+### **Backend**
+- Spring Boot 4.0.1 (Java 17)
+- Gradle 9.2.1 (build tool)
+- Hibernate ORM 7.2.0
+- MySQL 8.0.42 (database)
+
+---
+
+## 📋 **PROJECT STRUCTURE**
+
+```
+ReadinessTracker/
+├── Frontend (React/TypeScript)
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── StudentDashboard.tsx     (7 analysis tabs)
+│   │   │   ├── AdvisorDashboard.tsx     (student metrics)
+│   │   │   ├── AdminDashboard.tsx       (system overview)
+│   │   │   ├── LoginPage.tsx            (authentication)
+│   │   │   ├── SignupPage.tsx           (registration)
+│   │   │   └── LandingPage.tsx          (home page)
+│   │   ├── contexts/
+│   │   │   └── AuthContext.tsx          (auth state management)
+│   │   ├── lib/
+│   │   │   └── backend-api.ts           (API client)
+│   │   └── App.tsx                      (routing & layout)
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tailwind.config.js
+│
+└── Backend (Spring Boot)
+    ├── src/main/java/com/example/readinesstrackerbackend/
+    │   ├── controller/
+    │   │   ├── StudentController.java
+    │   │   ├── AdvisorController.java
+    │   │   └── AdminController.java
+    │   ├── service/
+    │   │   ├── StudentService.java
+    │   │   ├── AdvisorService.java
+    │   │   └── AdminService.java
+    │   ├── entity/
+    │   │   ├── Student.java
+    │   │   ├── Advisor.java
+    │   │   └── Admin.java
+    │   ├── repository/
+    │   │   ├── StudentRepository.java
+    │   │   ├── AdvisorRepository.java
+    │   │   └── AdminRepository.java
+    │   └── ReadinessTrackerBackendApplication.java
+    ├── resources/
+    │   └── application.properties
+    └── build.gradle
+```
+
+---
+
+## ✨ **FEATURES**
+
+### **StudentDashboard** (7 Analysis Tabs)
+1. **Overview** - Total students, GPA, current year stats
+2. **My Profile** - Full student profile information
+3. **All Students** - Table of all students in the system
+4. **GitHub Analysis** - Repository score, repos, stars, contributions
+5. **Social Media Analysis** - LinkedIn, Facebook profiles & presence score
+6. **Modules** - Course progress tracking with completion status
+7. **Industry Demand** - Skill match, trending skills analysis
+
+### **AdvisorDashboard**
+- Advisor profile and specialization
+- Student list with GPA metrics
+- Statistics: Total students, Average GPA, High performers
+- Color-coded GPA badges
+
+### **AdminDashboard**
+- System overview with user counts
+- Student, Advisor, Admin statistics
+- Student-to-advisor ratio analysis
+- System health status
+
+### **Authentication**
+- Role-based login (Student/Advisor/Admin)
+- User registration with role selection
+- Secure session management via localStorage
+- Password validation
+
+---
+
+## 🔧 **API ENDPOINTS**
+
+### **Student Endpoints**
+- `POST /api/students/register` - Register new student
+- `POST /api/students/login` - Authenticate student
+- `GET /api/students` - Get all students
+- `GET /api/students/{id}` - Get student by ID
+
+### **Advisor Endpoints**
+- `POST /api/advisors/register` - Register new advisor
+- `POST /api/advisors/login` - Authenticate advisor
+- `GET /api/advisors` - Get all advisors
+- `GET /api/advisors/{id}` - Get advisor by ID
+
+### **Admin Endpoints**
+- `POST /api/admins/register` - Register new admin
+- `POST /api/admins/login` - Authenticate admin
+- `GET /api/admins` - Get all admins
+- `GET /api/admins/{id}` - Get admin by ID
+
+---
+
+## 🗄️ **DATABASE SCHEMA**
+
+### **Students Table**
+```sql
+CREATE TABLE students (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(255),
+  email VARCHAR(255) UNIQUE,
+  password VARCHAR(255),
+  registration_number VARCHAR(50),
+  current_year VARCHAR(10),
+  current_gpa DECIMAL(3,2),
+  github_username VARCHAR(255),
+  linkedin_url VARCHAR(500),
+  facebook_url VARCHAR(500),
+  created_at BIGINT
+);
+```
+
+### **Advisors Table**
+```sql
+CREATE TABLE advisors (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(255),
+  email VARCHAR(255) UNIQUE,
+  password VARCHAR(255),
+  specialization VARCHAR(255),
+  department VARCHAR(255),
+  created_at BIGINT
+);
+```
+
+### **Admins Table**
+```sql
+CREATE TABLE admins (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(255),
+  email VARCHAR(255) UNIQUE,
+  password VARCHAR(255),
+  department VARCHAR(255),
+  created_at BIGINT
+);
+```
+
+---
+
+## 🚀 **HOW TO RUN LOCALLY**
+
+### **Prerequisites**
+- Java 17+
+- MySQL 8.0+
+- Node.js 16+ & npm
+- Git
+
+### **Setup Backend**
+
+```bash
+cd "d:\PROJECTS\group\Readiness tracker\readiness-tracker-backend"
+
+# Configure application.properties
+# - Set MySQL connection: jdbc:mysql://localhost:3306/readiness_tracker
+# - Set username: root
+# - Set password: 20001890
+
+# Run the backend
+gradle bootRun
+# Backend will start on http://localhost:8080
+```
+
+### **Setup Frontend**
+
+```bash
+cd "d:\PROJECTS\group\Rediness tracker\project"
+
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
+# Frontend will start on http://localhost:5174
 ```
 
-2. Open the Vite local URL (e.g. http://localhost:5173). In development the mock is pre-seeded with test users. You can sign in with the seeded emails in `src/lib/mockSeed.ts` (or any email — the mock will create a transient mock user).
+### **Test the Application**
 
-Notes and limitations
+1. Open browser: `http://localhost:5174`
+2. Click "Get Started" to register or "Login" to sign in
+3. Use these test credentials:
+   - **Email:** any email (auto-created)
+   - **Password:** any password
+   - **Role:** Choose Student/Advisor/Admin
 
-- The mock stores data in memory only — it resets on full page reload. If you want persistence across reloads, consider editing the backend shim (for example `src/lib/backendClient.ts` or `src/lib/backendMock.ts`) to persist `db` into `localStorage`.
-- The mock intentionally implements only the API surface the frontend needs. If you encounter a missing method or different return shape, the easiest fix is to extend the backend shim (or the mock) to match the expected behavior.
+---
 
-How to revert to a real hosted backend
+## 📊 **DATA FLOW**
 
-If you later want to restore a real hosted backend, create a client module (for example `src/lib/backendClient.ts`) that initializes the client with your service URL and key and install the appropriate SDK for your backend provider.
-
-3. Remove the mock seeder import from `src/main.tsx` (or guard it so it does not run in production). For example, remove or comment out the dynamic import:
-
-```ts
-if (import.meta.env.DEV) {
-  void import('./lib/mockSeed');
-}
+```
+Frontend (React)
+  ↓ (HTTP Request)
+Vite Dev Server (http://localhost:5174)
+  ↓ (API Call via backend-api.ts)
+Spring Boot Backend (http://localhost:8080)
+  ↓ (JPA Query)
+MySQL Database (localhost:3306)
+  ↓ (Returns data)
+Spring Boot (Response)
+  ↓ (JSON)
+Frontend (Renders Dashboard)
 ```
 
-4. If you need the seeded profile rows in your real hosted backend project, either:
-  - Run server-side seeding with a service_role key (not recommended to store in repo), or
-  - Use the SQL editor in your hosted backend project and insert the rows manually using INSERT statements. The test user IDs used by the previous dev run are in `src/lib/mockSeed.ts` if you want to match them.
+---
 
-Security note
-- The in-memory mock is for local development only. Do not ship it to production. All dev-only imports are guarded by `import.meta.env.DEV` to avoid accidental bundling.
+## 🔐 **SECURITY FEATURES**
 
-Questions or changes
-- If you want persistent dev data (localStorage), automatic seed toggles, or a richer mock (update/delete, nested selects), tell me which features you want and I can implement them.
+- ✅ CORS enabled for frontend communication
+- ✅ Role-based access control (RBAC)
+- ✅ Session persistence via localStorage
+- ✅ Password validation on registration
+- ✅ Email uniqueness enforcement
 
-## Server API contract (/api) and example Spring Boot controllers
+---
 
-When running in production the frontend expects a RESTful backend under the `/api` prefix. The development adapter (`src/lib/api.ts`) proxies to the in-memory mock in `DEV` and switches to these REST endpoints in production. The minimal endpoints the frontend expects are listed below.
+## 📝 **CONTRIBUTORS**
 
-Minimal endpoints
-- GET  /api/auth/user
-  - Returns the currently authenticated user (or null)
-- POST /api/auth/signin
-  - Body: { email, password }
-  - Returns session/user object
-- POST /api/auth/signup
-  - Body: { email, password }
-  - Creates user and returns created user/session
-- POST /api/auth/signout
-  - Signs out the current session (server-side cookie/session management)
-- GET  /api/{table}
-  - Query params implement simple filters such as `user_id=...`, `student_id=...`, or `select=id,full_name`.
-  - Returns array of rows matching filters.
-- POST /api/{table}
-  - Body: object or array of objects to insert. Returns created rows.
+- **Pasindu Teshan (Pasinduteshan7)** - 60%
+  - Backend Setup & Database
+  - Backend API Endpoints
+  - Dashboard Pages & Analysis
 
-These endpoints are intentionally minimal. Your Spring Boot backend can implement richer semantics, but keeping this surface will let the existing frontend run without changes.
+- **Developer 2** - 20%
+- **Developer 3** - 15%
+- **Developer 4** - 5%
 
-Example Spring Boot controller skeletons
+---
 
-Below are very small controller examples (Java + Spring Boot) showing how the routes above might be implemented. These are intentionally minimal and omit persistence/service layers — they illustrate the mapping and request/response shapes expected by the frontend.
+## 📄 **LICENSE**
 
-AuthController.java
+This project is open source and available under the MIT License.
 
-```java
-package com.example.readinesstracker.api;
+---
 
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
+## 🤝 **SUPPORT**
 
-import java.util.Map;
+For issues, questions, or contributions, please open an issue on GitHub or contact the development team.
 
-@RestController
-@RequestMapping("/api/auth")
-public class AuthController {
+**Repository:** https://github.com/Pasinduteshan7/ReadinessTracker
 
-    @GetMapping("/user")
-    public ResponseEntity<?> getUser() {
-        // return currently authenticated user or null
-        return ResponseEntity.ok(Map.of("user", null));
-    }
-
-    @PostMapping("/signin")
-    public ResponseEntity<?> signIn(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        // Authenticate and return user/session
-        return ResponseEntity.ok(Map.of("user", Map.of("id", "u-1", "email", email)));
-    }
-
-    @PostMapping("/signup")
-    public ResponseEntity<?> signUp(@RequestBody Map<String, String> body) {
-        // Create a user and return created user/session
-        return ResponseEntity.ok(Map.of("user", Map.of("id", "u-2", "email", body.get("email"))));
-    }
-
-    @PostMapping("/signout")
-    public ResponseEntity<?> signOut() {
-        // Invalidate session/cookie
-        return ResponseEntity.ok(Map.of("ok", true));
-    }
-}
-```
-
-TableController.java (generic table access)
-
-```java
-package com.example.readinesstracker.api;
-
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
-
-import java.util.List;
-import java.util.Map;
-
-@RestController
-@RequestMapping("/api")
-public class TableController {
-
-    @GetMapping("/{table}")
-    public ResponseEntity<?> listTable(
-        @PathVariable String table,
-        @RequestParam Map<String, String> allRequestParams
-    ) {
-        // Interpret select and simple equality filters and return matching rows
-        // Example: /api/student_profiles?user_id=u-1&select=id,full_name
-        List<Map<String, Object>> rows = List.of();
-        return ResponseEntity.ok(rows);
-    }
-
-    @PostMapping("/{table}")
-    public ResponseEntity<?> insertIntoTable(@PathVariable String table, @RequestBody Object payload) {
-        // Accept an object or array and persist; return created rows
-        return ResponseEntity.ok(payload);
-    }
-}
-```
-
-Notes for backend implementers
-- Authentication/session handling: the example uses very small stubs. Implement proper authentication (JWT, session cookies, OAuth) as appropriate.
-- Filtering and `select`: the frontend uses simple `eq`, `in`, `maybeSingle` and `single` patterns. Implement lightweight query parsing for query params (or provide richer endpoints) and return JSON arrays or single objects accordingly.
-- CORS and cookies: configure CORS and cookie settings so your frontend can call these endpoints in production.
-
-If you want, I can scaffold a minimal Spring Boot project (pom.xml + these controllers + DTOs) that compiles and runs locally so you can wire it to the frontend.
