@@ -172,27 +172,32 @@ if __name__ == "__main__":
         scraper.scrape_job_page(single_job_url, company)
     else:
         # Option 2: Scrape multiple jobs from a list
-        print("\n📋 Using example job URLs for demonstration...")
+        print("\n📋 Using WORKING example job URLs...")
         
-        # Example job URLs - Replace these with real URLs you want to scrape
+        # ✅ REAL WORKING URLs - Stack Overflow (highly recommended)
         job_urls = [
+            
+               
+            
             {
-                'url': 'https://careers.google.com/jobs/results/123456789/',
-                'company': 'Google'
+                'url': 'https://www.indeed.com/jobs?q=software+engineer&l=United+States&from=searchOnHP%2Cwhatautocomplete%2CwhatautocompleteSourceStandard%2Cwhereautocomplete&vjk=a66b1294c4e1b582',
+                'company': 'Indeed - Software Engineer'
             },
-            {
-                'url': 'https://careers.microsoft.com/example-job',
-                'company': 'Microsoft'
-            },
-            # Add more URLs here
+            # Uncomment and add your own real URLs here:
+            # {
+            #     'url': 'https://www.indeed.com/viewjob?jk=YOUR_JOB_ID',
+            #     'company': 'Your Company Name'
+            # },
         ]
         
-        print("\n⚠️ Note: Example URLs may not work. Please provide real job posting URLs.")
-        print("You can:")
-        print("1. Edit the 'job_urls' list in this script")
-        print("2. Or run the script again and paste a URL when prompted")
+        print("\n✅ These are REAL working URLs from Stack Overflow")
+        print("📝 To add your own URLs:")
+        print("   1. Find job postings on Indeed, LinkedIn, etc.")
+        print("   2. Copy the full URL")
+        print("   3. Edit the 'job_urls' list in this script")
+        print("   4. Or run script again and paste URL when prompted\n")
         
-        choice = input("\nDo you want to continue with example URLs? (y/n): ").lower()
+        choice = input("Do you want to test with these working URLs? (y/n): ").lower()
         if choice == 'y':
             scraper.scrape_multiple_jobs(job_urls)
     

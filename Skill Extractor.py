@@ -5,7 +5,22 @@ from spacy.matcher import PhraseMatcher
 nlp = spacy.load("en_core_web_sm")
 
 # 2. Define the languages we want to track (The "Dictionary")
-languages = ["Python", "Java", "JavaScript", "C++", "Go", "Rust", "TypeScript", "SQL", "Ruby"]
+languages = [
+    # Programming Languages
+    "Python", "Java", "JavaScript", "C++", "C#", "Go", "Rust", "TypeScript", "SQL", "Ruby", "PHP", "Kotlin", "Swift", "Scala",
+    # Frontend Frameworks
+    "React", "Angular", "Vue", "Node.js", "Express",
+    # Backend Frameworks
+    "Django", "Flask", "Spring Boot", "Spring",
+    # Databases
+    "PostgreSQL", "MongoDB", "MySQL", "Redis", "Oracle", "Cassandra", "DynamoDB",
+    # Cloud Platforms
+    "AWS", "Azure", "GCP", "Google Cloud",
+    # DevOps & Tools
+    "Docker", "Kubernetes", "Jenkins", "Git", "GitLab", "Terraform",
+    # Data & ML
+    "Pandas", "NumPy", "TensorFlow", "PyTorch", "Scikit-learn",
+]
 
 # 3. Initialize the Matcher
 matcher = PhraseMatcher(nlp.vocab, attr="LOWER") # Case-insensitive
