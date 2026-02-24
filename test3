@@ -1,0 +1,4 @@
+Job_ID,Company,Job_Title,URL,Detected_Skills,Skills_Count,Description_Length,Scraped_Date
+JOB_001,Dice - Software Engineer,Unknown Position,https://www.dice.com/jobs?location=United+States&q=Software+&radiusUnit=mi&latitude=38.7945952&longitude=-106.5348379&countryCode=US&locationPrecision=Country,,0,612,2026-02-24 22:05:04
+JOB_002,ITPro - General,"Explore IT, Software and Tech Jobs in Sri Lanka",https://itpro.lk/,"React, Nestjs, Next.js",3,73,2026-02-24 22:05:18
+JOB_003,Indeed - Software Engineer,software engineer jobs in United States,https://www.indeed.com/jobs?q=software+engineer&l=United+States&from=searchOnHP%2Cwhatautocomplete%2CwhatautocompleteSourceStandard%2Cwhereautocomplete&vjk=a66b1294c4e1b582,C++,1,779,2026-02-24 22:05:42

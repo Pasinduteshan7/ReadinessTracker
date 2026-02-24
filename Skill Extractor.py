@@ -7,19 +7,73 @@ nlp = spacy.load("en_core_web_sm")
 # 2. Define the languages we want to track (The "Dictionary")
 languages = [
     # Programming Languages
-    "Python", "Java", "JavaScript", "C++", "C#", "Go", "Rust", "TypeScript", "SQL", "Ruby", "PHP", "Kotlin", "Swift", "Scala",
-    # Frontend Frameworks
-    "React", "Angular", "Vue", "Node.js", "Express",
+    "Python", "Java", "JavaScript", "C++", "C#", "Go", "Rust", "TypeScript", "SQL", "Ruby", "PHP", "Kotlin", "Swift", "Scala", "R", "Objective-C", "Groovy", "Perl", "Lua", "Elixir", "Clojure", "Haskell", "F#",
+    
+    # Frontend Frameworks & Libraries
+    "React", "Angular", "Vue", "Node.js", "Express", "Svelte", "Next.js", "Nuxt", "Gatsby", "Ember", "Backbone", "jQuery", "Bootstrap", "Tailwind", "Material UI", "Webpack", "Vite",
+    
     # Backend Frameworks
-    "Django", "Flask", "Spring Boot", "Spring",
-    # Databases
-    "PostgreSQL", "MongoDB", "MySQL", "Redis", "Oracle", "Cassandra", "DynamoDB",
-    # Cloud Platforms
-    "AWS", "Azure", "GCP", "Google Cloud",
-    # DevOps & Tools
-    "Docker", "Kubernetes", "Jenkins", "Git", "GitLab", "Terraform",
+    "Django", "Flask", "Spring Boot", "Spring", "FastAPI", "Fastify", "NestJS", "ASP.NET", "ASP.NET Core", "Ruby on Rails", "Laravel", "Symfony", "Gin", "Echo", "Actix", "Rocket",
+    
+    # Databases & Data Management
+    "PostgreSQL", "MongoDB", "MySQL", "Redis", "Oracle", "Cassandra", "DynamoDB", "Elasticsearch", "Firebase", "Firestore", "SQLite", "MariaDB", "CouchDB", "Neo4j", "Memcached", "InfluxDB", "BigQuery",
+    
+    # Cloud Platforms & Services
+    "AWS", "Azure", "GCP", "Google Cloud", "IBM Cloud", "DigitalOcean", "Heroku", "Alibaba Cloud", "Oracle Cloud",
+    
+    # AWS Specific Services
+    "EC2", "S3", "Lambda", "RDS", "DynamoDB", "CloudFront", "Route53", "IAM", "VPC",
+    
+    # DevOps & Infrastructure
+    "Docker", "Kubernetes", "Jenkins", "Git", "GitLab", "GitHub", "Terraform", "Ansible", "Chef", "Puppet", "Helm", "CircleCI", "Travis CI", "GitLab CI", "GitHub Actions", "ArgoCD", "Vagrant",
+    
+    # Monitoring & Logging
+    "Prometheus", "Grafana", "ELK Stack", "Splunk", "Datadog", "New Relic", "CloudWatch", "Sentry",
+    
+    # API & Web Technologies
+    "REST", "GraphQL", "gRPC", "WebSocket", "SOAP", "OpenAPI", "Postman", "Insomnia", "Swagger",
+    
+    # Message Queues & Streaming
+    "Kafka", "RabbitMQ", "ActiveMQ", "AWS SQS", "AWS SNS", "Apache Pulsar", "NATS",
+    
     # Data & ML
-    "Pandas", "NumPy", "TensorFlow", "PyTorch", "Scikit-learn",
+    "Pandas", "NumPy", "TensorFlow", "PyTorch", "Scikit-learn", "Keras", "XGBoost", "LightGBM", "Spark", "Hadoop", "Airflow", "Dask", "Plotly", "Matplotlib", "Seaborn", "Jupyter", "Anaconda",
+    
+    # Testing & QA
+    "Selenium", "Cypress", "Jest", "Mocha", "Pytest", "JUnit", "TestNG", "Jasmine", "RSpec", "PHPUnit", "NUnit",
+    
+    # Version Control & Collaboration
+    "Git", "Mercurial", "SVN", "Perforce", "GitHub", "GitLab", "Bitbucket", "Azure DevOps",
+    
+    # Agile & Project Management
+    "Jira", "Confluence", "Trello", "Asana", "Monday.com", "Slack", "MS Teams",
+    
+    # Security & Authentication
+    "OAuth", "JWT", "SAML", "Okta", "Auth0", "Keycloak", "SSL", "TLS", "HTTPS", "Vault",
+    
+    # Virtualization & Containerization
+    "VirtualBox", "VMware", "Hyper-V", "Docker", "Kubernetes", "Docker Compose", "Podman",
+    
+    # Blockchain & Web3
+    "Ethereum", "Solidity", "Bitcoin", "Blockchain", "Smart Contracts", "Web3", "NFT",
+    
+    # Mobile Development
+    "React Native", "Flutter", "Swift", "Kotlin", "Xamarin", "Ionic", "Cordova", "Android", "iOS",
+    
+    # Game Development
+    "Unity", "Unreal Engine", "Godot", "Cocos2d",
+    
+    # Low-Code/No-Code
+    "Salesforce", "ServiceNow", "Microsoft Power Platform", "OutSystems", "Mendix",
+    
+    # CMS & Content Management
+    "WordPress", "Drupal", "Joomla", "Magento", "Shopify", "Contentful", "Strapi",
+    
+    # Documentation & Knowledge
+    "Markdown", "AsciiDoc", "Sphinx", "MkDocs", "Gitbook",
+    
+    # Continuous Integration/Deployment
+    "CI/CD", "GitOps", "Blue Green Deployment", "Canary Deployment",
 ]
 
 # 3. Initialize the Matcher

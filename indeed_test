@@ -1,2 +1,3 @@
+
 Job_ID,Company,Job_Title,URL,Detected_Skills,Skills_Count,Description_Length,Scraped_Date
 JOB_001,Indeed - Software Engineer,software engineer jobs in United States,https://www.indeed.com/jobs?q=software+engineer&l=United+States&from=searchOnHP%2Cwhatautocomplete%2CwhatautocompleteSourceStandard%2Cwhereautocomplete&vjk=a66b1294c4e1b582,C++,1,779,2026-02-24 21:28:12

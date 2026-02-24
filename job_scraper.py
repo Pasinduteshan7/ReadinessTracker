@@ -176,8 +176,14 @@ if __name__ == "__main__":
         
         # ✅ REAL WORKING URLs - Stack Overflow (highly recommended)
         job_urls = [
-            
-               
+            {
+                'url': 'https://www.dice.com/jobs?location=United+States&q=Software+&radiusUnit=mi&latitude=38.7945952&longitude=-106.5348379&countryCode=US&locationPrecision=Country',
+                'company': 'Dice - Software Engineer'
+            },
+             {
+                'url': 'https://itpro.lk/',
+                'company': 'ITPro - General'
+            },
             
             {
                 'url': 'https://www.indeed.com/jobs?q=software+engineer&l=United+States&from=searchOnHP%2Cwhatautocomplete%2CwhatautocompleteSourceStandard%2Cwhereautocomplete&vjk=a66b1294c4e1b582',
