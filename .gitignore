@@ -21,3 +21,18 @@ dist-ssr
 *.sln
 *.sw?
 .env
+# Java/Maven/Gradle
+target/
+build/
+.gradle/
+*.jar
+*.class
+*.war
+*.ear
+.classpath
+.project
+.settings/
+*.iml
+__pycache__/
+*.py[cod]
+*$py.class
