@@ -316,7 +316,7 @@ class BackgroundAnalyzer:
         tier2 = [r for r in repo_scores if "TIER 2" in r["tier"]]
         tier3 = [r for r in repo_scores if "TIER 3" in r["tier"]]
         skip = [r for r in repo_scores if r["tier"] == "SKIP"]
-        logger.info(f)
+        logger.info(f"📊 Repository Analysis Summary: TIER 1: {len(tier1)}, TIER 2: {len(tier2)}, TIER 3: {len(tier3)}, SKIP: {len(skip)}")
         return repo_scores
     @staticmethod
     def select_best_repos(repo_scores: List[Dict], max_count: int = 10) -> List[Dict]:

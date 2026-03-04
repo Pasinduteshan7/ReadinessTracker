@@ -32,7 +32,11 @@ class OllamaClient:
             logger.error(f"Ollama API error: {str(e)}")
             raise Exception(f"Failed to connect to Ollama: {str(e)}")
     def analyze_code_quality(self, code: str) -> Dict[str, float]:
-        prompt = f
+        prompt = f"""Analyze code quality:
+{code}
+
+Return JSON: {{"quality": 0.X, "complexity": 0.X, "documentation": 0.X, "testing": 0.X, "maintainability": 0.X}}
+Only JSON."""
         try:
             response = self.generate(prompt, model=self.model_quality_primary)
             start = response.find('{')
@@ -57,7 +61,11 @@ class OllamaClient:
             "maintainability": 0.5
         }
     def detect_ai_patterns(self, code: str) -> Dict[str, Any]:
-        prompt = f
+        prompt = f"""Detect AI patterns in code:
+{code}
+
+Return JSON: {{"repetitive_patterns": 0.X, "unusual_history": 0.X, "low_variation": 0.X, "generic_naming": 0.X, "ai_likelihood": 0.X}}
+Only JSON."""
         try:
             response = self.generate(prompt, model=self.model_ai_detect, temperature=0.3)
             start = response.find('{')
@@ -82,7 +90,10 @@ class OllamaClient:
             "ai_likelihood": 0.15
         }
     def calculate_neural_score(self, quality_avg: float, ai_penalty: float, algorithm_score: float) -> float:
-        prompt = f
+        prompt = f"""Calculate final score from: quality={quality_avg}, ai_penalty={ai_penalty}, algorithm={algorithm_score}
+
+Return JSON: {{"final_score": 0.X}}
+Only JSON."""
         try:
             response = self.generate(prompt, model=self.model_algorithm, temperature=0.1)
             start = response.find('{')

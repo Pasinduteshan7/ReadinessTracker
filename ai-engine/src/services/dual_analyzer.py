@@ -10,7 +10,14 @@ ollama = OllamaClient()
 class DualAnalyzer:
     @staticmethod
     def analyze_with_codellama(repo: Repository) -> Dict[str, float]:
-        prompt = f
+        prompt = f"""Analyze this code repository and provide JSON scores (0-1 scale):
+Repository: {repo.name}
+URL: {repo.url}
+Description: {repo.description}
+
+Analyze and return JSON with these exact fields:
+{{ "quality": 0.X, "architecture": 0.X, "documentation": 0.X, "error_handling": 0.X, "testing": 0.X }}
+Only return valid JSON, no other text."""
         try:
             response = ollama.generate(prompt, model=settings.MODEL_QUALITY_PRIMARY, temperature=0.5)
             start = response.find('{')
@@ -38,7 +45,14 @@ class DualAnalyzer:
         }
     @staticmethod
     def analyze_with_qwen(repo: Repository) -> Dict[str, float]:
-        prompt = f
+        prompt = f"""Analyze this repository for code quality metrics and return JSON scores (0-1 scale):
+Repository: {repo.name}
+URL: {repo.url}
+Description: {repo.description}
+
+Analyze and return JSON with these exact fields:
+{{ "readability": 0.X, "performance": 0.X, "maintainability": 0.X, "security": 0.X, "standards": 0.X }}
+Only return valid JSON, no other text."""
         try:
             response = ollama.generate(prompt, model=settings.MODEL_QUALITY_SECONDARY, temperature=0.5)
             start = response.find('{')

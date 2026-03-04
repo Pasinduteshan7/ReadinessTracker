@@ -21,7 +21,7 @@ function AppContent() {
     setCurrentPage(page);
   };
   const handleAuthSuccess = () => {
-    // Handle auth success
+    // Auth successful
   };
   if (loading) {
     return (
@@ -33,7 +33,6 @@ function AppContent() {
       </div>
     );
   }
-
   if (user) {
     if (user.role === 'student') {
       return <StudentDashboard />;

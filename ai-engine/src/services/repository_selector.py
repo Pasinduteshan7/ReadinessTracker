@@ -16,7 +16,11 @@ class RepositorySelector:
             f"{i+1}. {repo.name} ({repo.language}, {repo.stars} stars, {repo.forks} forks)"
             for i, repo in enumerate(repositories)
         ])
-        prompt = f
+        prompt = f"""Select top {limit} repositories for deep analysis:
+{repos_summary}
+
+Return JSON: {{"selected_indices": [0, 1, ...], "reason": "Your selection reason"}}
+Only JSON."""
         try:
             response = ollama.generate(prompt, model=settings.MODEL_QUALITY_SECONDARY, temperature=0.5)
             logger.info(f"Qwen selection response: {response[:200]}...")

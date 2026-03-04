@@ -119,7 +119,7 @@ export function StudentDashboard() {
 
       setAnalyzeLoading(true);
       let attempts = 0;
-      const maxAttempts = 40; /
+      const maxAttempts = 40;
       const pollInterval = setInterval(async () => {
         attempts++;
         try {

@@ -1,3 +1,4 @@
+# Logs
 logs
 *.log
 npm-debug.log*
@@ -6,11 +7,46 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Node
+node_modules/
+dist/
+dist-ssr/
 *.local
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+ENV/
+env/
+.venv
+pip-log.txt
+*.egg-info/
+dist/
+build/
+
+# Java/Gradle/Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+*.jar
+*.war
+.classpath
+.factorypath
+.project
+.settings/
+bin/
+out/
+.idea/
+*.iml
+*.iws
+*.ipr
+*.class
+
+# IDE
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -20,19 +56,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment
 .env
-# Java/Maven/Gradle
-target/
-build/
-.gradle/
-*.jar
-*.class
-*.war
-*.ear
-.classpath
-.project
-.settings/
-*.iml
-__pycache__/
-*.py[cod]
-*$py.class
+.env.local
+.env.*.local
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# OS
+Thumbs.db

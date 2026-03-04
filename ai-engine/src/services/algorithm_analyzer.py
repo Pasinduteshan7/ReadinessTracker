@@ -8,7 +8,11 @@ ollama = OllamaClient()
 class AlgorithmAnalyzer:
     @staticmethod
     def analyze_algorithm(algorithm_code: str, language: str = "python") -> dict:
-        prompt = f
+        prompt = f"""Analyze this {language} algorithm code and provide JSON scores (0-1):
+{algorithm_code}
+
+Return JSON: {{"time_complexity": 0.X, "space_complexity": 0.X, "clarity": 0.X, "error_handling": 0.X, "optimization": 0.X}}
+Only JSON, no other text."""
         try:
             response = ollama.generate(prompt, model=settings.MODEL_ALGORITHM, temperature=0.3)
             start = response.find('{')

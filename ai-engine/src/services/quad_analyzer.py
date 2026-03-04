@@ -41,7 +41,12 @@ class QuadAnalyzer:
             logger.warning(f"Could not unload {model_name}: {str(e)}")
     @staticmethod
     def analyze_with_qwen(repo: Repository) -> Dict[str, float]:
-        prompt = f
+        prompt = f"""Analyze repository for readability, performance, maintainability:
+Repo: {repo.name}
+URL: {repo.url}
+
+Return JSON: {{"readability": 0.X, "performance": 0.X, "maintainability": 0.X, "standards": 0.X, "extensibility": 0.X}}
+Only JSON."""
         try:
             response = ollama.generate(prompt, model="qwen2.5-coder:3b", temperature=0.5)
             start = response.find('{')
@@ -69,7 +74,12 @@ class QuadAnalyzer:
         }
     @staticmethod
     def analyze_with_codellama(repo: Repository) -> Dict[str, float]:
-        prompt = f
+        prompt = f"""Analyze repository for quality, architecture, documentation:
+Repo: {repo.name}
+URL: {repo.url}
+
+Return JSON: {{"quality": 0.X, "architecture": 0.X, "documentation": 0.X, "error_handling": 0.X, "testing": 0.X}}
+Only JSON."""
         try:
             response = ollama.generate(prompt, model="codellama:7b", temperature=0.5)
             start = response.find('{')
@@ -97,7 +107,12 @@ class QuadAnalyzer:
         }
     @staticmethod
     def analyze_with_deepseek(repo: Repository) -> Dict[str, float]:
-        prompt = f
+        prompt = f"""Analyze repository for patterns, efficiency, best practices:
+Repo: {repo.name}
+URL: {repo.url}
+
+Return JSON: {{"patterns": 0.X, "efficiency": 0.X, "modularity": 0.X, "robustness": 0.X, "clarity": 0.X}}
+Only JSON."""
         try:
             response = ollama.generate(prompt, model="deepseek-coder:6.7b", temperature=0.5)
             start = response.find('{')
@@ -125,7 +140,12 @@ class QuadAnalyzer:
         }
     @staticmethod
     def analyze_with_starcoder(repo: Repository) -> Dict[str, float]:
-        prompt = f
+        prompt = f"""Analyze repository for structure, consistency, completeness:
+Repo: {repo.name}
+URL: {repo.url}
+
+Return JSON: {{"structure": 0.X, "consistency": 0.X, "completeness": 0.X, "complexity": 0.X, "production": 0.X}}
+Only JSON."""
         try:
             response = ollama.generate(prompt, model="starcoder2:7b", temperature=0.5)
             start = response.find('{')
