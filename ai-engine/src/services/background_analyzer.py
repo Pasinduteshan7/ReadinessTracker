@@ -296,6 +296,20 @@ class BackgroundAnalyzer:
             commits = BackgroundAnalyzer.fetch_commits_data(username, repo.name)
             if not repo_data:
                 logger.warning(f"Could not fetch data for {repo.name}")
+                # Add default score for repos with no data
+                repo_scores.append({
+                    "name": repo.name,
+                    "url": repo.url,
+                    "language": repo.language,
+                    "stars": repo.stars,
+                    "background_score": 30.0,
+                    "tier": "TIER 3 (Quick Analysis)",
+                    "commits": 0,
+                    "size_kb": 0,
+                    "has_issues": False,
+                    "forks": 0,
+                    "description": ""
+                })
                 continue
             score, tier = BackgroundAnalyzer.calculate_background_score(repo_data, commits)
             repo_scores.append({
@@ -320,12 +334,17 @@ class BackgroundAnalyzer:
         return repo_scores
     @staticmethod
     def select_best_repos(repo_scores: List[Dict], max_count: int = 10) -> List[Dict]:
-        tier1_repos = [r for r in repo_scores if "TIER 1" in r["tier"]]
-        tier2_repos = [r for r in repo_scores if "TIER 2" in r["tier"]]
+        if not repo_scores:
+            logger.warning("No repository scores available for selection")
+            return []
+        tier1_repos = [r for r in repo_scores if "TIER 1" in r.get("tier", "")]
+        tier2_repos = [r for r in repo_scores if "TIER 2" in r.get("tier", "")]
         selected = tier1_repos[:max_count]
         if len(selected) < max_count:
             selected.extend(tier2_repos[:max_count - len(selected)])
+        if not selected:
+            selected = repo_scores[:max_count]
         logger.info(f"✅ Selected {len(selected)} repos for deep LLM analysis")
         for i, repo in enumerate(selected, 1):
-            logger.info(f"  {i}. {repo['name']} (Score: {repo['background_score']:.1f})")
+            logger.info(f"  {i}. {repo.get('name', 'unknown')} (Score: {repo.get('background_score', 0):.1f})")
         return selected
