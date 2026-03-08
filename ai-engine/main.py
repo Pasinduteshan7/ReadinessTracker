@@ -2,7 +2,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.config.settings import settings
-from src.api.routes import analysis, score, intelligent_analysis
+from src.api.routes import analysis, score, intelligent_analysis, algorithm_evaluation
 logging.basicConfig(level=settings.LOG_LEVEL)
 logger = logging.getLogger(__name__)
 app = FastAPI(
@@ -20,6 +20,7 @@ app.add_middleware(
 app.include_router(analysis.router)
 app.include_router(score.router)
 app.include_router(intelligent_analysis.router)
+app.include_router(algorithm_evaluation.router)
 @app.get("/")
 async def root():
     return {
@@ -43,6 +44,10 @@ async def root():
             "scoring": {
                 "neural_network": "POST /api/score/neural-network",
                 "health": "GET /api/score/health"
+            },
+            "algorithm_evaluation": {
+                "evaluate": "POST /api/algorithm/evaluate",
+                "health": "GET /api/algorithm/health"
             }
         }
     }
@@ -50,12 +55,20 @@ async def root():
 async def startup_event():
     logger.info("🚀 AI Engine starting...")
     logger.info(f"Ollama Host: {settings.OLLAMA_HOST}")
-    logger.info(f"\n📊 LLM Model Configuration (Option A):")
-    logger.info(f"   🔹 Repo Quality (PRIMARY):   {settings.MODEL_QUALITY_PRIMARY}")
-    logger.info(f"   🔹 Repo Quality (SECONDARY): {settings.MODEL_QUALITY_SECONDARY}")
-    logger.info(f"   🔹 AI Detection:             {settings.MODEL_AI_DETECT}")
-    logger.info(f"   🔹 Algorithm Analysis:       {settings.MODEL_ALGORITHM}")
-    logger.info(f"   ✅ API running on {settings.API_HOST}:{settings.API_PORT}\n")
+    logger.info(f"\n📊 LLM Model Configuration:")
+    logger.info(f"   GitHub Analysis (Legacy):")
+    logger.info(f"      🔹 Repo Quality (PRIMARY):   {settings.MODEL_QUALITY_PRIMARY}")
+    logger.info(f"      🔹 Repo Quality (SECONDARY): {settings.MODEL_QUALITY_SECONDARY}")
+    logger.info(f"      🔹 AI Detection:             {settings.MODEL_AI_DETECT}")
+    logger.info(f"   \n   Algorithm Evaluation (6-Phase Pipeline) ⭐:")
+    logger.info(f"      Phase 1: CodeLlama 7B              → Architecture & Structure")
+    logger.info(f"      Phase 2: Qwen2.5-Coder 3B         → Correctness & Best Practices")
+    logger.info(f"      Phase 3: DeepSeek-Coder 1.3B      → Efficiency & Optimization")
+    logger.info(f"      Phase 4: DeepSeek-R1 1.5B         → Reasoning & Edge Cases")
+    logger.info(f"      Phase 5: DeepSeek-Coder 6.7B      → Deep Code Analysis")
+    logger.info(f"      Phase 6: StarCoder2 7B            → Security & Best Practices")
+    logger.info(f"      Final Score: MEDIAN of 6 phases (60% LLM + 40% Tests)")
+    logger.info(f"   \n   ✅ API running on {settings.API_HOST}:{settings.API_PORT}\n")
 @app.on_event("shutdown")
 async def shutdown_event():
     logger.info("🛑 AI Engine shutting down...")
