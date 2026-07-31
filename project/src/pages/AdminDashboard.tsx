@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, LogOut, Users, Award } from 'lucide-react';
 import { studentApi, advisorApi, adminApi } from '../lib/backend-api';
+import { BatchConfigurationPanel } from '../components/admin/BatchConfigurationPanel';
+import { BenchmarkPanel } from '../components/admin/BenchmarkPanel';
+import { GitHubAnalysisPanel } from '../components/admin/GitHubAnalysisPanel';
+import { SocialMediaPanel } from '../components/admin/SocialMediaPanel';
+import { ModulesPanel } from '../components/admin/ModulesPanel';
+import { IndustryDemandPanel } from '../components/admin/IndustryDemandPanel';
 interface Admin {
   id: number;
   name: string;
@@ -20,6 +26,8 @@ export function AdminDashboard() {
     totalAdmins: 0,
     averageGPA: 0
   });
+  type AdminTab = 'overview' | 'github' | 'social' | 'modules' | 'industry';
+  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   useEffect(() => {
@@ -108,8 +116,35 @@ export function AdminDashboard() {
         )}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-slate-900 mb-2">Admin Dashboard</h2>
-          <p className="text-slate-600">System-wide statistics and overview</p>
+          <p className="text-slate-600">System-wide management and overview</p>
         </div>
+
+        {/* Tabs */}
+        <div className="flex gap-4 border-b border-slate-200 mb-8 overflow-x-auto pb-4">
+          {[
+            { id: 'overview', label: 'Overview' },
+            { id: 'github', label: 'GitHub Analysis' },
+            { id: 'social', label: 'Social Media' },
+            { id: 'modules', label: 'Modules' },
+            { id: 'industry', label: 'Industry Demand' },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id as AdminTab)}
+              className={`px-6 py-2 font-medium whitespace-nowrap transition-colors rounded-lg ${
+                activeTab === t.id
+                  ? 'bg-red-50 text-red-700'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <>
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
             <div className="flex items-center justify-between mb-4">
@@ -177,6 +212,14 @@ export function AdminDashboard() {
             </div>
           </div>
         </div>
+          </>
+        )}
+
+        {/* New Module Tabs */}
+        {activeTab === 'github' && <GitHubAnalysisPanel />}
+        {activeTab === 'social' && <SocialMediaPanel />}
+        {activeTab === 'modules' && <ModulesPanel />}
+        {activeTab === 'industry' && <IndustryDemandPanel />}
       </div>
     </div>
   );

@@ -69,3 +69,7 @@ out/
 
 # OS
 Thumbs.db
+
+# AI Models
+*.gguf
+*.bin

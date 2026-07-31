@@ -31,6 +31,16 @@ export const studentApi = {
     if (!response.ok) throw new Error('Failed to fetch student');
     return response.json();
   },
+  updateStudent: async (id: number, updates: any) => {
+    const response = await fetch(`${API_BASE}/students/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(updates),
+    });
+    if (!response.ok) throw new Error('Failed to update student');
+    return response.json();
+  },
 };
 
 export const advisorApi = {
@@ -95,6 +105,76 @@ export const adminApi = {
   getAdminById: async (id: number) => {
     const response = await fetch(`${API_BASE}/admins/${id}`);
     if (!response.ok) throw new Error('Failed to fetch admin');
+    return response.json();
+  },
+};
+
+export const benchmarkApi = {
+  addBenchmark: async (data: {
+    fullName: string;
+    githubUsername: string;
+    graduationYear: number;
+    outcomeLabel: string;
+    companyRole?: string;
+    consentConfirmed: boolean;
+  }) => {
+    const response = await fetch(`${API_BASE}/admin/benchmarks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || 'Failed to add benchmark');
+    }
+    return response.json();
+  },
+  getAllBenchmarks: async () => {
+    const response = await fetch(`${API_BASE}/admin/benchmarks`);
+    if (!response.ok) throw new Error('Failed to fetch benchmarks');
+    return response.json();
+  },
+  deleteBenchmark: async (id: number) => {
+    const response = await fetch(`${API_BASE}/admin/benchmarks/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to delete benchmark');
+    return response.json();
+  },
+  analyzeBenchmark: async (id: number, githubToken?: string) => {
+    const url = new URL(`${API_BASE}/admin/benchmarks/${id}/analyze`);
+    if (githubToken) {
+      url.searchParams.append('githubToken', githubToken);
+    }
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to start analysis');
+    return response.json();
+  },
+  analyzeAllBenchmarks: async (githubToken?: string) => {
+    const url = new URL(`${API_BASE}/admin/benchmarks/analyze-all`);
+    if (githubToken) {
+      url.searchParams.append('githubToken', githubToken);
+    }
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to start batch analysis');
+    return response.json();
+  },
+  getBaseline: async () => {
+    const response = await fetch(`${API_BASE}/admin/benchmarks/baseline`);
+    if (!response.ok) throw new Error('Failed to fetch baseline');
+    return response.json();
+  },
+  getStudentBaseline: async () => {
+    const response = await fetch(`${API_BASE}/github/benchmark-baseline`);
+    if (!response.ok) throw new Error('Failed to fetch baseline');
     return response.json();
   },
 };

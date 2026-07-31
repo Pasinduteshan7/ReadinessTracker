@@ -9,8 +9,6 @@ interface StudentFormData {
   currentYear: string;
   currentGpa: string;
   githubUsername: string;
-  linkedinUrl: string;
-  facebookUrl: string;
 }
 export function StudentSignupPage() {
   const [loading, setLoading] = useState(false);
@@ -25,8 +23,6 @@ export function StudentSignupPage() {
     currentYear: '1st Year',
     currentGpa: '',
     githubUsername: '',
-    linkedinUrl: '',
-    facebookUrl: '',
   });
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -53,8 +49,6 @@ export function StudentSignupPage() {
         currentYear: formData.currentYear,
         currentGpa: formData.currentGpa ? parseFloat(formData.currentGpa) : 0,
         githubUsername: formData.githubUsername || '',
-        linkedinUrl: formData.linkedinUrl || '',
-        facebookUrl: formData.facebookUrl || '',
       });
       setSuccess(true);
       setFormData({
@@ -66,8 +60,6 @@ export function StudentSignupPage() {
         currentYear: '1st Year',
         currentGpa: '',
         githubUsername: '',
-        linkedinUrl: '',
-        facebookUrl: '',
       });
       setTimeout(() => {
         window.location.href = '/login';
@@ -189,38 +181,13 @@ export function StudentSignupPage() {
               />
             </div>
             {}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">GitHub Username</label>
-                <input
-                  type="text"
-                  name="githubUsername"
-                  value={formData.githubUsername}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">LinkedIn URL</label>
-                <input
-                  type="text"
-                  name="linkedinUrl"
-                  value={formData.linkedinUrl}
-                  onChange={handleChange}
-                  placeholder="linkedin.com/in/..."
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            {}
             <div>
-              <label className="block text-sm font-medium mb-1">Facebook URL</label>
+              <label className="block text-sm font-medium mb-1">GitHub Username</label>
               <input
                 type="text"
-                name="facebookUrl"
-                value={formData.facebookUrl}
+                name="githubUsername"
+                value={formData.githubUsername}
                 onChange={handleChange}
-                placeholder="facebook.com/..."
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

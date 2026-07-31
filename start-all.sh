@@ -46,12 +46,12 @@ echo ""
 echo "🚀 Starting all components..."
 echo ""
 
-# Create a temporary script to run services in background
-READINESS_DIR="/Users/yourname/Readiness tracker"
+# Setup base directory robustly
+READINESS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Start AI Engine in new terminal
 echo "1️⃣  Starting AI Engine (Python/FastAPI on port 8000)..."
-open -a Terminal "$(pwd)/ai-engine/start.sh" &
+open -a Terminal "$READINESS_DIR/readiness-tracker-backend/github-service/ai_engine_with_fine_tuned_llm/start.sh" &
 sleep 2
 
 # Start Backend

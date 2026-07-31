@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Github, Zap, X, AlertCircle, CheckCircle, Code } from 'lucide-react';
 import { AnalysisResults, type AnalysisResult } from '../AnalysisResults';
 import { AlgorithmChallengePage } from '../../pages/AlgorithmChallengePage';
@@ -37,15 +37,99 @@ export function GitHubAnalysisTab({
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('easy');
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [githubToken, setGithubToken] = useState('');
+  const [tokenStatus, setTokenStatus] = useState<'valid' | 'invalid' | 'not-checked' | 'checking'>('not-checked');
+  const [tokenValidationMessage, setTokenValidationMessage] = useState('');
+  const [tokenValidationError, setTokenValidationError] = useState('');
+  const [savedToken, setSavedToken] = useState<string | null>(null);
 
-  const handleSaveGitHubToken = () => {
+  // Load token from localStorage on component mount
+  useEffect(() => {
+    const storedToken = localStorage.getItem('githubToken');
+    if (storedToken) {
+      setSavedToken(storedToken);
+      setTokenStatus('valid');
+      setTokenValidationMessage('Token loaded from storage ✓');
+    }
+  }, []);
+
+  const validateToken = async (token: string) => {
+    if (!token.trim()) {
+      setTokenValidationError('Please enter a valid GitHub token');
+      setTokenStatus('invalid');
+      return;
+    }
+
+    setTokenStatus('checking');
+    setTokenValidationError('');
+    setTokenValidationMessage('');
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/github/validate-token?token=${encodeURIComponent(token)}`);
+      const data = await response.json();
+
+      if (data.valid) {
+        setTokenStatus('valid');
+        setTokenValidationMessage(data.message || 'Token is valid! ✅');
+      } else {
+        setTokenStatus('invalid');
+        setTokenValidationError(data.message || 'Token validation failed');
+      }
+    } catch (error) {
+      setTokenStatus('invalid');
+      setTokenValidationError('Error validating token. Please check your connection.');
+      console.error('Token validation error:', error);
+    }
+  };
+
+  const handleSaveGitHubToken = async () => {
     if (!githubToken.trim()) {
       alert('Please enter a valid GitHub token');
       return;
     }
+
+    // Validate token first
+    await validateToken(githubToken);
+    
+    // If validation fails, don't save
+    if (tokenStatus === 'invalid' || tokenStatus === 'checking') {
+      alert('⚠️  Please use a valid GitHub token. Token validation failed.');
+      return;
+    }
+
+    // Save to both localStorage (persistent) and sessionStorage (for current session)
+    localStorage.setItem('githubToken', githubToken);
     sessionStorage.setItem('githubToken', githubToken);
+    setSavedToken(githubToken);
     setShowTokenModal(false);
-    alert('✅ GitHub token saved successfully!');
+    setGithubToken('');
+    setTokenStatus('not-checked');
+    alert('✅ GitHub token saved successfully! (Will persist across browser sessions)');
+  };
+
+  const handleTokenInputChange = (value: string) => {
+    setGithubToken(value);
+    // Reset validation status when user edits the token
+    setTokenStatus('not-checked');
+    setTokenValidationMessage('');
+    setTokenValidationError('');
+  };
+
+  const handleAnalyzeGitHub = async (username: string) => {
+    // Use saved token or prompt for one
+    const token = savedToken || sessionStorage.getItem('githubToken') || localStorage.getItem('githubToken');
+    
+    if (!token) {
+      const proceed = window.confirm(
+        '⚠️  No GitHub token configured. This will use the unauthenticated API (60 requests/hour limit) and may fail for large repositories.\n\nDo you want to continue anyway, or add a token first?'
+      );
+      if (!proceed) {
+        setShowTokenModal(true);
+        return;
+      }
+    }
+    
+    // Call the provided handler
+    onAnalyzeGitHub(username);
   };
 
   return (
@@ -79,30 +163,26 @@ export function GitHubAnalysisTab({
                 <Github className="w-8 h-8 text-slate-900" />
                 <h2 className="text-2xl font-bold text-slate-900">GitHub Analysis</h2>
               </div>
-              {sessionStorage.getItem('githubToken') && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm font-medium text-green-700">Token Configured</span>
-                </div>
-              )}
-            </div>
-            {!sessionStorage.getItem('githubToken') && (
-              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-amber-900 mb-1">GitHub Token Not Configured</p>
-                  <p className="text-sm text-amber-700 mb-3">
-                    GitHub API has rate limits (60 requests/hour without token). To avoid hitting these limits, please add your GitHub personal access token.
-                  </p>
-                  <button
-                    onClick={() => setShowTokenModal(true)}
-                    className="text-sm font-medium text-amber-700 hover:text-amber-800 underline"
-                  >
-                    Add GitHub Token →
-                  </button>
-                </div>
+              <div className="flex items-center gap-4">
+                {savedToken ? (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="text-sm font-medium text-green-700">Token Saved ✓</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+                    <AlertCircle className="w-5 h-5 text-amber-600" />
+                    <span className="text-sm font-medium text-amber-700">No Token</span>
+                  </div>
+                )}
+                <button
+                  onClick={() => setShowTokenModal(true)}
+                  className="text-sm font-medium px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                >
+                  {savedToken ? 'Update Token' : 'Add Token'}
+                </button>
               </div>
-            )}
+            </div>
             <div className="grid md:grid-cols-2 gap-6 mb-6">
               <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-6 border border-slate-200">
                 <p className="text-sm text-slate-600 mb-2">GitHub Username</p>
@@ -130,22 +210,13 @@ export function GitHubAnalysisTab({
               {currentUser?.githubUsername ? (
                 <>
                   <button
-                    onClick={() => currentUser.githubUsername && onAnalyzeGitHub(currentUser.githubUsername)}
+                    onClick={() => currentUser.githubUsername && handleAnalyzeGitHub(currentUser.githubUsername)}
                     disabled={analyzeLoading}
                     className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
                   >
                     <Zap className="w-5 h-5" />
                     {analyzeLoading ? 'Analyzing...' : 'Analyze Repository'}
                   </button>
-                  {!sessionStorage.getItem('githubToken') && (
-                    <button
-                      onClick={() => setShowTokenModal(true)}
-                      className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-colors flex items-center gap-2"
-                    >
-                      <Github className="w-5 h-5" />
-                      Configure Token
-                    </button>
-                  )}
                 </>
               ) : (
                 <p className="text-slate-600">Please connect your GitHub account to analyze repositories</p>
@@ -199,9 +270,17 @@ export function GitHubAnalysisTab({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-slate-200 sticky top-0 bg-white">
-              <h3 className="text-xl font-bold text-slate-900">Add GitHub Personal Access Token</h3>
+              <h3 className="text-xl font-bold text-slate-900">
+                {sessionStorage.getItem('githubToken') ? 'Update' : 'Add'} GitHub Personal Access Token
+              </h3>
               <button
-                onClick={() => setShowTokenModal(false)}
+                onClick={() => {
+                  setShowTokenModal(false);
+                  setGithubToken('');
+                  setTokenStatus('not-checked');
+                  setTokenValidationMessage('');
+                  setTokenValidationError('');
+                }}
                 className="text-slate-400 hover:text-slate-600"
               >
                 <X className="w-6 h-6" />
@@ -236,13 +315,45 @@ export function GitHubAnalysisTab({
                   type="password"
                   placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                   value={githubToken}
-                  onChange={(e) => setGithubToken(e.target.value)}
+                  onChange={(e) => handleTokenInputChange(e.target.value)}
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                 />
                 <p className="text-xs text-slate-600 mt-2">
                   Token format: Starts with "ghp_" and is about 36-40 characters long
                 </p>
               </div>
+
+              {tokenValidationMessage && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-green-900">Token Valid ✓</p>
+                    <p className="text-sm text-green-900 mt-1">{tokenValidationMessage}</p>
+                  </div>
+                </div>
+              )}
+
+              {tokenValidationError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-red-900">Token Invalid ✗</p>
+                    <p className="text-sm text-red-900 mt-1">{tokenValidationError}</p>
+                    <p className="text-xs text-red-800 mt-2">Please check that your token is valid and hasn't expired.</p>
+                  </div>
+                </div>
+              )}
+
+              {tokenStatus === 'checking' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+                  <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-blue-900">Validating Token...</p>
+                    <p className="text-sm text-blue-900 mt-1">Checking GitHub API access...</p>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <p className="font-semibold text-green-900 mb-2">Benefits of Adding a Token:</p>
                 <ul className="text-sm text-green-900 space-y-1 ml-4 list-disc">
@@ -255,15 +366,18 @@ export function GitHubAnalysisTab({
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={handleSaveGitHubToken}
-                  disabled={!githubToken.trim()}
+                  disabled={!githubToken.trim() || tokenStatus === 'checking'}
                   className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold rounded-lg transition-colors"
                 >
-                  Save Token
+                  {tokenStatus === 'checking' ? 'Validating...' : 'Save Token'}
                 </button>
                 <button
                   onClick={() => {
                     setShowTokenModal(false);
                     setGithubToken('');
+                    setTokenStatus('not-checked');
+                    setTokenValidationMessage('');
+                    setTokenValidationError('');
                   }}
                   className="flex-1 px-4 py-3 bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold rounded-lg transition-colors"
                 >

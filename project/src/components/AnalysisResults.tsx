@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { 
   TrendingUp, 
   Code, 
@@ -7,7 +8,9 @@ import {
   Zap,
   CheckCircle,
   AlertCircle,
-  Loader
+  Loader,
+  ArrowDown,
+  ArrowUp
 } from 'lucide-react';
 export interface AnalysisResult {
   username: string;
@@ -26,6 +29,11 @@ export interface AnalysisResult {
   tier3Count: number;
   repositories: RepositoryAnalysis[];
   completedAt: string;
+  // AI Employability Metrics
+  employabilityTier?: string;
+  professionalReadiness?: number;
+  growthPotential?: number;
+  recommendedLevel?: string;
 }
 export interface RepositoryAnalysis {
   name: string;
@@ -39,6 +47,11 @@ export interface RepositoryAnalysis {
   codeLlamaAnalysis?: string;
   qwenAnalysis?: string;
   neuralScore?: number;
+  codeQualityScore?: number;
+  architectureScore?: number;
+  documentationScore?: number;
+  testingScore?: number;
+  bestPracticesScore?: number;
 }
 interface AnalysisResultsProps {
   result: AnalysisResult | null;
@@ -87,6 +100,44 @@ export function AnalysisResults({ result, loading = false, error }: AnalysisResu
     if (tier.includes('TIER 2')) return 'bg-blue-600 text-white';
     if (tier.includes('TIER 3')) return 'bg-yellow-600 text-white';
     return 'bg-slate-600 text-white';
+  };
+
+  // Benchmark comparison state
+  interface Baseline {
+    avgCodeQuality: number;
+    avgArchitecture: number;
+    avgDocumentation: number;
+    avgTesting: number;
+    avgBestPractices: number;
+    avgOverallScore: number;
+    scoreSpread: number;
+    sampleSize: number;
+  }
+
+  const [baseline, setBaseline] = useState<Baseline | null>(null);
+
+  useEffect(() => {
+    // Fetch benchmark baseline for comparison
+    const fetchBaseline = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/github/benchmark-baseline');
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.sampleSize > 0) {
+            setBaseline(data);
+          }
+        }
+      } catch {
+        // Silently fail — baseline comparison is optional
+      }
+    };
+    fetchBaseline();
+  }, []);
+
+  const getGapColor = (gap: number) => {
+    if (gap >= 0) return 'text-green-600';
+    if (gap > -10) return 'text-amber-600';
+    return 'text-red-600';
   };
   return (
     <div className="space-y-8">
@@ -173,6 +224,118 @@ export function AnalysisResults({ result, loading = false, error }: AnalysisResu
           </div>
         </div>
       </div>
+
+      {/* Benchmark Comparison Section */}
+      {baseline && (
+        <div className="bg-white rounded-xl shadow border border-slate-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-white">
+                <TrendingUp className="w-5 h-5" />
+                <h3 className="text-lg font-bold">Benchmark Comparison</h3>
+              </div>
+              <span className="text-xs text-emerald-100 bg-emerald-700/50 px-3 py-1 rounded-full">
+                Based on {baseline.sampleSize} successful graduate{baseline.sampleSize !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Metric</th>
+                    <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Your Score</th>
+                    <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Benchmark Avg</th>
+                    <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Gap</th>
+                    <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Progress</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {[
+                    { label: 'Code Quality', yours: result.codeQualityScore, bench: baseline.avgCodeQuality, color: 'blue' },
+                    { label: 'Architecture', yours: result.architectureScore, bench: baseline.avgArchitecture, color: 'green' },
+                    { label: 'Documentation', yours: result.documentationScore, bench: baseline.avgDocumentation, color: 'yellow' },
+                    { label: 'Testing', yours: result.testingScore, bench: baseline.avgTesting, color: 'purple' },
+                  ].map((metric) => {
+                    const gap = (metric.yours || 0) - metric.bench;
+                    const pct = metric.bench > 0 ? Math.min(((metric.yours || 0) / metric.bench) * 100, 150) : 0;
+                    return (
+                      <tr key={metric.label} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-3 px-4 font-semibold text-sm text-slate-900">{metric.label}</td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="text-lg font-bold text-slate-900">{(metric.yours || 0).toFixed(1)}</span>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="text-lg font-medium text-slate-500">{metric.bench.toFixed(1)}</span>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={`inline-flex items-center gap-1 text-sm font-bold ${getGapColor(gap)}`}>
+                            {gap >= 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                            {gap >= 0 ? '+' : ''}{gap.toFixed(1)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="w-full bg-slate-200 rounded-full h-2.5 relative">
+                            <div
+                              className={`h-2.5 rounded-full transition-all duration-500 ${
+                                pct >= 100 ? 'bg-green-500' : pct >= 80 ? 'bg-amber-500' : 'bg-red-500'
+                              }`}
+                              style={{ width: `${Math.min(pct, 100)}%` }}
+                            />
+                            {/* Benchmark marker */}
+                            <div className="absolute top-0 h-2.5 w-0.5 bg-slate-800" style={{ left: `${Math.min((100 / 150) * 100, 100)}%` }} />
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1 text-center">{pct.toFixed(0)}% of benchmark</p>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {/* Overall row */}
+                  <tr className="bg-slate-50 font-bold">
+                    <td className="py-3 px-4 text-sm text-slate-900">Overall Score</td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="text-xl font-bold text-slate-900">{result.overallScore.toFixed(1)}</span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="text-xl font-medium text-slate-500">{baseline.avgOverallScore.toFixed(1)}</span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      {(() => {
+                        const gap = result.overallScore - baseline.avgOverallScore;
+                        return (
+                          <span className={`inline-flex items-center gap-1 text-base font-bold ${getGapColor(gap)}`}>
+                            {gap >= 0 ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                            {gap >= 0 ? '+' : ''}{gap.toFixed(1)}
+                          </span>
+                        );
+                      })()}
+                    </td>
+                    <td className="py-3 px-4">
+                      {(() => {
+                        const pct = baseline.avgOverallScore > 0 ? Math.min((result.overallScore / baseline.avgOverallScore) * 100, 150) : 0;
+                        return (
+                          <>
+                            <div className="w-full bg-slate-300 rounded-full h-3 relative">
+                              <div
+                                className={`h-3 rounded-full transition-all duration-500 ${
+                                  pct >= 100 ? 'bg-green-500' : pct >= 80 ? 'bg-amber-500' : 'bg-red-500'
+                                }`}
+                                style={{ width: `${Math.min(pct, 100)}%` }}
+                              />
+                            </div>
+                            <p className="text-xs text-slate-600 mt-1 text-center font-semibold">{pct.toFixed(0)}% of benchmark</p>
+                          </>
+                        );
+                      })()}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
       {}
       <div className="grid md:grid-cols-3 gap-4">
         <div className="bg-purple-50 rounded-lg border border-purple-200 p-6">
@@ -200,6 +363,35 @@ export function AnalysisResults({ result, loading = false, error }: AnalysisResu
           <p className="text-xs text-yellow-700 mt-2">Basic projects</p>
         </div>
       </div>
+      
+      {/* AI Employability Insights Section */}
+      <div className="bg-white rounded-xl shadow border border-slate-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+          <div className="flex items-center gap-2 text-white">
+            <Users className="w-5 h-5" />
+            <h3 className="text-lg font-bold">AI Employability Insights</h3>
+          </div>
+        </div>
+        <div className="p-6 grid md:grid-cols-4 gap-6">
+          <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100 flex flex-col items-center text-center">
+            <p className="text-sm font-semibold text-indigo-900 mb-1">Employability Tier</p>
+            <p className="text-2xl font-bold text-indigo-700">{result.employabilityTier || 'N/A'}</p>
+          </div>
+          <div className="bg-purple-50 rounded-lg p-4 border border-purple-100 flex flex-col items-center text-center">
+            <p className="text-sm font-semibold text-purple-900 mb-1">Recommended Level</p>
+            <p className="text-2xl font-bold text-purple-700">{result.recommendedLevel || 'N/A'}</p>
+          </div>
+          <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-100 flex flex-col items-center text-center">
+            <p className="text-sm font-semibold text-emerald-900 mb-1">Professional Readiness</p>
+            <p className="text-2xl font-bold text-emerald-700">{result.professionalReadiness ? `${result.professionalReadiness.toFixed(1)}%` : 'N/A'}</p>
+          </div>
+          <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 flex flex-col items-center text-center">
+            <p className="text-sm font-semibold text-blue-900 mb-1">Growth Potential</p>
+            <p className="text-2xl font-bold text-blue-700">{result.growthPotential ? `${result.growthPotential.toFixed(1)}%` : 'N/A'}</p>
+          </div>
+        </div>
+      </div>
+      
       {}
       <div>
         <h3 className="text-xl font-bold text-slate-900 mb-4">Detailed Repository Analysis</h3>
@@ -248,6 +440,32 @@ export function AnalysisResults({ result, loading = false, error }: AnalysisResu
                   <p className="text-2xl font-bold text-slate-900">{repo.languages.length}</p>
                 </div>
               </div>
+              
+              {/* Detailed AI Scores */}
+              {(repo.codeQualityScore || repo.architectureScore) && (
+                <div className="grid grid-cols-5 gap-2 mb-4 p-4 bg-white/50 rounded-lg border border-slate-200">
+                  <div className="text-center">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-1">Code Quality</p>
+                    <p className="text-lg font-bold text-blue-600">{(repo.codeQualityScore || 0).toFixed(1)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-1">Architecture</p>
+                    <p className="text-lg font-bold text-green-600">{(repo.architectureScore || 0).toFixed(1)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-1">Documentation</p>
+                    <p className="text-lg font-bold text-yellow-600">{(repo.documentationScore || 0).toFixed(1)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-1">Testing</p>
+                    <p className="text-lg font-bold text-purple-600">{(repo.testingScore || 0).toFixed(1)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-1">Best Practices</p>
+                    <p className="text-lg font-bold text-indigo-600">{(repo.bestPracticesScore || 0).toFixed(1)}</p>
+                  </div>
+                </div>
+              )}
               {repo.languages.length > 0 && (
                 <div className="mb-4">
                   <p className="text-xs text-slate-600 mb-2">Languages</p>

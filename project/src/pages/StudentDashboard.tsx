@@ -85,7 +85,8 @@ export function StudentDashboard() {
         throw new Error('User ID not found. Current user: ' + JSON.stringify(currentUser));
       }
 
-      const savedToken = sessionStorage.getItem('githubToken');
+      // Try to get token from localStorage (persistent) or sessionStorage (current session)
+      const savedToken = localStorage.getItem('githubToken') || sessionStorage.getItem('githubToken');
 
       const response = await fetch('http://localhost:8080/api/github/analyze', {
         method: 'POST',

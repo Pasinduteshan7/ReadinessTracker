@@ -21,9 +21,7 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
     registrationNumber: '',
     currentYear: 1,
     currentGpa: '',
-    githubUsername: '',
-    linkedinUrl: '',
-    facebookUrl: ''
+    githubUsername: ''
   });
   const [advisorData, setAdvisorData] = useState({
     fullName: '',
@@ -71,9 +69,7 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
         registrationNumber: studentData.registrationNumber,
         currentYear: studentData.currentYear,
         currentGpa: studentData.currentGpa ? parseFloat(studentData.currentGpa) : 0,
-        githubUsername: studentData.githubUsername || '',
-        linkedinUrl: studentData.linkedinUrl || '',
-        facebookUrl: studentData.facebookUrl || ''
+        githubUsername: studentData.githubUsername || ''
       });
       setSuccess(true);
 
@@ -350,37 +346,15 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
                   />
                 </div>
               </div>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">GitHub Username</label>
-                  <input
-                    type="text"
-                    value={studentData.githubUsername}
-                    onChange={(e) => setStudentData({ ...studentData, githubUsername: e.target.value })}
-                    placeholder="username"
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">LinkedIn URL</label>
-                  <input
-                    type="text"
-                    value={studentData.linkedinUrl}
-                    onChange={(e) => setStudentData({ ...studentData, linkedinUrl: e.target.value })}
-                    placeholder="linkedin.com/in/..."
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Facebook URL</label>
-                  <input
-                    type="text"
-                    value={studentData.facebookUrl}
-                    onChange={(e) => setStudentData({ ...studentData, facebookUrl: e.target.value })}
-                    placeholder="facebook.com/..."
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">GitHub Username</label>
+                <input
+                  type="text"
+                  value={studentData.githubUsername}
+                  onChange={(e) => setStudentData({ ...studentData, githubUsername: e.target.value })}
+                  placeholder="username"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
               <button
                 type="submit"
