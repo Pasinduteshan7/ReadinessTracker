@@ -26,6 +26,13 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
         response = await adminApi.login(email, password);
       }
 
+      if (selectedRole === 'student') {
+        if (typeof response?.token !== 'string' || !response.token.trim()) {
+          throw new Error('The server did not return an authentication token. Please try again.');
+        }
+        localStorage.setItem('token', response.token);
+      }
+
       localStorage.setItem('user', JSON.stringify({
         ...response,
         role: selectedRole

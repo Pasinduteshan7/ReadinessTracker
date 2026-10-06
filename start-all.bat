@@ -45,12 +45,7 @@ if %errorlevel% neq 0 (
 echo ✅ Python detected
 
 REM Check Ollama
-powershell -Command "try { $response = Invoke-WebRequest -Uri 'http://localhost:11434/api/tags' -UseBasicParsing -ErrorAction Stop; Write-Host '✅ Ollama is running' } catch { Write-Host '❌ Ollama not running. Please start: ollama serve'; exit 1 }"
-
-if %errorlevel% neq 0 (
-    pause
-    exit /b 1
-)
+powershell -Command "try { $response = Invoke-WebRequest -Uri 'http://localhost:11434/api/tags' -UseBasicParsing -ErrorAction Stop; Write-Host '✅ Ollama is running' } catch { Write-Host '⚠️  Ollama is not running (needed only if using local LLMs)' }"
 
 echo.
 echo 🚀 Starting all components...

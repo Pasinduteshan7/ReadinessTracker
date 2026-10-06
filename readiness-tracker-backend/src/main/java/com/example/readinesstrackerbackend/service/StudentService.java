@@ -75,6 +75,10 @@ public class StudentService {
             if (updates.getCurrentYear() != null && !updates.getCurrentYear().isEmpty()) {
                 student.setCurrentYear(updates.getCurrentYear());
             }
+
+            if (updates.getSkills() != null) {
+                student.setSkills(normalizeSkills(updates.getSkills()));
+            }
             
             if (updates.getCurrentGpa() != null && updates.getCurrentGpa() >= 0) {
                 student.setCurrentGpa(updates.getCurrentGpa());
@@ -118,5 +122,13 @@ public class StudentService {
             return stringValue;
         }
         return defaultValue;
+    }
+
+    private String normalizeSkills(String skills) {
+        return java.util.Arrays.stream(skills.split(","))
+                .map(String::trim)
+                .filter(skill -> !skill.isEmpty())
+                .distinct()
+                .collect(java.util.stream.Collectors.joining(", "));
     }
 }

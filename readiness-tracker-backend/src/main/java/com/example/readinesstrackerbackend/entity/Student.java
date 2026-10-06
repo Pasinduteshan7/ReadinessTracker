@@ -22,6 +22,8 @@ public class Student {
     private String password;
     @Column
     private String currentYear;
+    @Column(columnDefinition = "TEXT")
+    private String skills;
     @Column(nullable = true)
     private Double currentGpa;
     @Column(nullable = true)
