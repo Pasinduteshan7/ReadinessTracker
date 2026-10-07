@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, LogOut, Users, BarChart3, User } from 'lucide-react';
-import { advisorApi, studentApi } from '../lib/backend-api';
+import { TrendingUp, LogOut, Users, BarChart3, User, GraduationCap, Sparkles } from 'lucide-react';
+import { studentApi, moduleMarksApi } from '../lib/backend-api';
+import { AdvisorModuleMarksModal } from '../components/advisor/AdvisorModuleMarksModal';
 interface Advisor {
   id: number;
   name: string;
@@ -20,6 +21,8 @@ interface Student {
 export function AdvisorDashboard() {
   const [currentUser, setCurrentUser] = useState<Advisor | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
+  const [marksMap, setMarksMap] = useState<Record<number, any>>({});
+  const [selectedStudentForMarks, setSelectedStudentForMarks] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   useEffect(() => {
@@ -35,8 +38,20 @@ export function AdvisorDashboard() {
         setCurrentUser(user);
       }
 
-      const studentsList = await studentApi.getAllStudents();
+      const [studentsList, allMarks] = await Promise.all([
+        studentApi.getAllStudents(),
+        moduleMarksApi.getAllMarks().catch(() => [])
+      ]);
+
       setStudents(studentsList);
+
+      const map: Record<number, any> = {};
+      if (Array.isArray(allMarks)) {
+        allMarks.forEach((m: any) => {
+          if (m.studentId) map[m.studentId] = m;
+        });
+      }
+      setMarksMap(map);
     } catch (err: any) {
       setError(err.message || 'Failed to load data');
       console.error(err);
@@ -165,44 +180,91 @@ export function AdvisorDashboard() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                       GPA
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      AI Specialization
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200">
-                  {students.map((student) => (
-                    <tr key={student.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-slate-900">{student.name}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-600 text-sm">
-                        {student.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                        {student.registrationNumber}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                        {student.currentYear}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            student.currentGpa >= 3.5
-                              ? 'bg-green-100 text-green-700'
-                              : student.currentGpa >= 3.0
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-yellow-100 text-yellow-700'
-                          }`}
-                        >
-                          {student.currentGpa.toFixed(2)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {students.map((student) => {
+                    const studentMarks = marksMap[student.id];
+                    return (
+                      <tr key={student.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="font-medium text-slate-900">{student.name}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-slate-600 text-sm">
+                          {student.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                          {student.registrationNumber}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                          {student.currentYear}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              student.currentGpa >= 3.5
+                                ? 'bg-green-100 text-green-700'
+                                : student.currentGpa >= 3.0
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-yellow-100 text-yellow-700'
+                            }`}
+                          >
+                            {student.currentGpa.toFixed(2)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {studentMarks && studentMarks.primarySpecialization ? (
+                            <div className="flex items-center gap-1.5">
+                              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1">
+                                <Sparkles className="w-3 h-3 text-indigo-500" />
+                                {studentMarks.primarySpecializationLabel || studentMarks.primarySpecialization}
+                              </span>
+                              {studentMarks.primaryConfidence && (
+                                <span className="text-[11px] text-slate-400 font-medium">
+                                  ({studentMarks.primaryConfidence.toFixed(0)}%)
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">
+                              Pending Marks
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedStudentForMarks(student)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors shadow-sm"
+                          >
+                            <GraduationCap className="w-4 h-4" />
+                            <span>Grade & Predict</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           )}
         </div>
       </div>
+
+      {selectedStudentForMarks && (
+        <AdvisorModuleMarksModal
+          student={selectedStudentForMarks}
+          isOpen={!!selectedStudentForMarks}
+          onClose={() => setSelectedStudentForMarks(null)}
+          onSaved={loadData}
+        />
+      )}
     </div>
   );
 }

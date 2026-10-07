@@ -1,0 +1,23 @@
+{
+  "Software_engineering_principle": 85,
+  "OOP_concept": 88,
+  "DSA": 82,
+  "ADSA": 80,
+  "ML": 65,
+  "AI": 60,
+  "image_processing": 58,
+  "QA_testing": 82,
+  "signal_and_system": 50,
+  "analog_electronics": 45,
+  "embeded_system": 55,
+  "software_architecture": 84,
+  "data_base": 88,
+  "digital_logic_design": 52,
+  "information_security": 70,
+  "devops": 80,
+  "operating_system_and_networking": 75,
+  "control_system": 48,
+  "digital_system_design_with_HDL": 45,
+  "computer_network": 72,
+  "GUI": 86
+}

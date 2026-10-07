@@ -178,3 +178,30 @@ export const benchmarkApi = {
     return response.json();
   },
 };
+
+export const moduleMarksApi = {
+  getStudentMarks: async (studentId: number) => {
+    const response = await fetch(`${API_BASE}/module-marks/student/${studentId}`);
+    if (!response.ok) throw new Error('Failed to fetch module marks');
+    return response.json();
+  },
+  saveStudentMarks: async (studentId: number, marks: Record<string, any>) => {
+    const response = await fetch(`${API_BASE}/module-marks/student/${studentId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(marks),
+    });
+    if (!response.ok) throw new Error('Failed to save module marks');
+    return response.json();
+  },
+  getAllMarks: async () => {
+    const response = await fetch(`${API_BASE}/module-marks/all`);
+    if (!response.ok) throw new Error('Failed to fetch all marks');
+    return response.json();
+  },
+  getCurriculum: async () => {
+    const response = await fetch(`${API_BASE}/module-marks/curriculum`);
+    if (!response.ok) throw new Error('Failed to fetch curriculum modules');
+    return response.json();
+  },
+};
