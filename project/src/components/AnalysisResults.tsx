@@ -1,4 +1,14 @@
 import { useState, useEffect } from 'react';
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+  Legend,
+  Tooltip as RechartsTooltip,
+} from 'recharts';
 import { 
   TrendingUp, 
   Code, 
@@ -134,6 +144,42 @@ export function AnalysisResults({ result, loading = false, error }: AnalysisResu
     fetchBaseline();
   }, []);
 
+  const getRadarData = () => {
+    if (!baseline || !result) return [];
+    return [
+      {
+        subject: 'Code Quality',
+        Student: result.codeQualityScore || 0,
+        Benchmark: baseline.avgCodeQuality || 0,
+        fullMark: 100,
+      },
+      {
+        subject: 'Architecture',
+        Student: result.architectureScore || 0,
+        Benchmark: baseline.avgArchitecture || 0,
+        fullMark: 100,
+      },
+      {
+        subject: 'Documentation',
+        Student: result.documentationScore || 0,
+        Benchmark: baseline.avgDocumentation || 0,
+        fullMark: 100,
+      },
+      {
+        subject: 'Testing',
+        Student: result.testingScore || 0,
+        Benchmark: baseline.avgTesting || 0,
+        fullMark: 100,
+      },
+      {
+        subject: 'Overall',
+        Student: result.overallScore || 0,
+        Benchmark: baseline.avgOverallScore || 0,
+        fullMark: 100,
+      }
+    ];
+  };
+
   const getGapColor = (gap: number) => {
     if (gap >= 0) return 'text-green-600';
     if (gap > -10) return 'text-amber-600';
@@ -240,6 +286,35 @@ export function AnalysisResults({ result, loading = false, error }: AnalysisResu
             </div>
           </div>
           <div className="p-6">
+            <div className="h-96 w-full mb-8 pt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={getRadarData()}>
+                  <PolarGrid stroke="#e2e8f0" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#475569', fontSize: 13, fontWeight: 600 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                  <Radar
+                    name="Benchmark Average"
+                    dataKey="Benchmark"
+                    stroke="#94a3b8"
+                    strokeDasharray="5 5"
+                    fill="#cbd5e1"
+                    fillOpacity={0.3}
+                  />
+                  <Radar
+                    name="Your Score"
+                    dataKey="Student"
+                    stroke="#2563eb"
+                    strokeWidth={2}
+                    fill="#3b82f6"
+                    fillOpacity={0.5}
+                  />
+                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                  <RechartsTooltip 
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
