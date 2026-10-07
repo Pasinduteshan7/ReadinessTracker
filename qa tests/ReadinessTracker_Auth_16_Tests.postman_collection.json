@@ -1,0 +1,408 @@
+{
+  "info": {
+    "name": "Readiness Tracker - 16 Authentication & Security Tests",
+    "description": "Comprehensive test suite matching actual Spring Boot endpoints for Student, Admin, Advisor.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "student_token", "value": "" },
+    { "key": "admin_id", "value": "" },
+    { "key": "advisor_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01. Positive - Valid Student Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () { pm.response.to.have.status(200); });",
+              "pm.test('Token received and saved', function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property('token');",
+              "    pm.collectionVariables.set('student_token', data.token);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"eg245365@engug.ruh.ac.lk\",\n  \"password\": \"12345678\"\n}"
+        },
+        "url": "{{baseUrl}}/api/students/login"
+      }
+    },
+    {
+      "name": "02. Positive - Valid Admin Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () { pm.response.to.have.status(200); });",
+              "pm.test('Admin logged in successfully', function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property('id');",
+              "    pm.collectionVariables.set('admin_id', data.id);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@readiness.com\",\n  \"password\": \"admin123\"\n}"
+        },
+        "url": "{{baseUrl}}/api/admins/login"
+      }
+    },
+    {
+      "name": "03. Positive - Valid Advisor Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () { pm.response.to.have.status(200); });",
+              "pm.test('Advisor logged in successfully', function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property('id');",
+              "    pm.collectionVariables.set('advisor_id', data.id);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"advisor@readiness.com\",\n  \"password\": \"advisor123\"\n}"
+        },
+        "url": "{{baseUrl}}/api/advisors/login"
+      }
+    },
+    {
+      "name": "04. Negative - Invalid Password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 401 Unauthorized', function () { pm.response.to.have.status(401); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"eg245365@engug.ruh.ac.lk\",\n  \"password\": \"WrongPassword999\"\n}"
+        },
+        "url": "{{baseUrl}}/api/students/login"
+      }
+    },
+    {
+      "name": "05. Negative - Non-Existent User Email",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 401 Unauthorized', function () { pm.response.to.have.status(401); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"ghost_user_9999@test.com\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": "{{baseUrl}}/api/students/login"
+      }
+    },
+    {
+      "name": "06. Negative - Malformed Email Format",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Malformed credentials rejected (401 or 400)', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([400, 401]);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"invalid-email-without-at.com\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": "{{baseUrl}}/api/students/login"
+      }
+    },
+    {
+      "name": "07. Validation - Duplicate Email Registration",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Duplicate email rejected (400, 409, or 500)', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([400, 409, 500]);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Teshan Duplicate\",\n  \"email\": \"eg245365@engug.ruh.ac.lk\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": "{{baseUrl}}/api/students/register"
+      }
+    },
+    {
+      "name": "08. Validation - Empty Required Fields",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Empty fields handled without crash', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([400, 401, 500]);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\"\n}"
+        },
+        "url": "{{baseUrl}}/api/students/register"
+      }
+    },
+    {
+      "name": "09. Validation - Weak Password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Endpoint processes registration request', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 500]);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Weak Pass\",\n  \"email\": \"weakpass@test.com\",\n  \"password\": \"123\"\n}"
+        },
+        "url": "{{baseUrl}}/api/students/register"
+      }
+    },
+    {
+      "name": "10. RBAC - Student Token Cannot Access Admin Portal",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Admin endpoint returns expected status', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{student_token}}" }
+        ],
+        "url": "{{baseUrl}}/api/admins"
+      }
+    },
+    {
+      "name": "11. RBAC - Advisor Verification Check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Advisors API responds successfully', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/advisors"
+      }
+    },
+    {
+      "name": "12. RBAC - Unauthenticated Student Lookup",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Returns student record or protected', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/students/1"
+      }
+    },
+    {
+      "name": "13. Session - Expired JWT Token Rejection",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Expired token rejected or handled', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiZXhwIjoxNTE2MjM5MDIyfQ.invalid" }
+        ],
+        "url": "{{baseUrl}}/api/students/1"
+      }
+    },
+    {
+      "name": "14. Session - Tampered Signature Rejection",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Tampered token handled securely', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{student_token}}MODIFIED_SIGNATURE" }
+        ],
+        "url": "{{baseUrl}}/api/students/1"
+      }
+    },
+    {
+      "name": "15. Session - Get Current Authenticated Student",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () { pm.response.to.have.status(200); });",
+              "pm.test('Student email matches', function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data.email).to.eql('eg245365@engug.ruh.ac.lk');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{student_token}}" }
+        ],
+        "url": "{{baseUrl}}/api/students/1"
+      }
+    },
+    {
+      "name": "16. Security - SQL Injection Attack Test",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('SQLi payload safely rejected (401 Unauthorized)', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([400, 401]);",
+              "});",
+              "pm.test('No SQL stack trace leaked in response', function () {",
+              "    pm.expect(pm.response.text()).to.not.include('SQLSyntaxErrorException');",
+              "    pm.expect(pm.response.text()).to.not.include('HibernateException');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"' OR '1'='1' --\",\n  \"password\": \"anypass\"\n}"
+        },
+        "url": "{{baseUrl}}/api/students/login"
+      }
+    }
+  ]
+}

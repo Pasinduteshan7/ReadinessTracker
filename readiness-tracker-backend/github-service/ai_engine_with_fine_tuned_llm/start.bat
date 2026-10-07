@@ -27,6 +27,7 @@ echo Starting Fine-Tuned LLM Analyzer on port 8000...
 echo API Docs available at: http://localhost:8000/docs
 echo.
 
+set PYTHONUTF8=1
 python main.py
 
 pause

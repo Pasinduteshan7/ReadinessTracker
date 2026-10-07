@@ -226,7 +226,7 @@ export function StudentDashboard() {
           />
         )}
         {activeTab === 'social' && <SocialMediaTab currentUser={currentUser} />}
-        {activeTab === 'modules' && <ModulesTab />}
+        {activeTab === 'modules' && <ModulesTab currentUser={currentUser} />}
         {activeTab === 'industry' && <IndustryDemandTab />}
       </div>
     </div>
