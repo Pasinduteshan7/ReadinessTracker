@@ -8,8 +8,8 @@ import org.springframework.stereotype.Repository;
 import com.example.readinesstrackerbackend.entity.FinalScore;
 @Repository
 public interface FinalScoreRepository extends JpaRepository<FinalScore, Long> {
-    Optional<FinalScore> findByUserId(Long userId);
-    Optional<FinalScore> findByUser(com.example.readinesstrackerbackend.model.User user);
+    Optional<FinalScore> findByStudentId(Long userId);
+    Optional<FinalScore> findByStudent(com.example.readinesstrackerbackend.entity.Student student);
     @Query(value = "SELECT * FROM final_scores WHERE final_score IS NOT NULL ORDER BY final_score DESC", 
            nativeQuery = true)
     List<FinalScore> findLeaderboard(Pageable pageable);

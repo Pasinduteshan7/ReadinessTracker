@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import com.example.readinesstrackerbackend.entity.FinalScore;
-import com.example.readinesstrackerbackend.model.User;
+import com.example.readinesstrackerbackend.entity.Student;
 import com.example.readinesstrackerbackend.repository.FinalScoreRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,16 +17,16 @@ public class ScoreCalculationService {
     private static final double REPO_QUALITY_WEIGHT = 0.4;
     private static final double ALGORITHM_WEIGHT = 0.3;
     private static final double AI_PENALTY_WEIGHT = 0.3;
-    public FinalScore calculateFinalScore(User user, Double repoQuality, 
+    public FinalScore calculateFinalScore(Student student, Double repoQuality, 
                                          Double algorithmScore, Double aiPenalty) {
-        log.info("Calculating final score for user: {}", user.getGithubUsername());
+        log.info("Calculating final score for user: {}", student.getGithubUsername());
 
         Double finalScore = (repoQuality * REPO_QUALITY_WEIGHT) + 
                            (algorithmScore * ALGORITHM_WEIGHT) - 
                            (aiPenalty * AI_PENALTY_WEIGHT);
         finalScore = Math.max(0, Math.min(100, finalScore));
         FinalScore score = new FinalScore();
-        score.setUser(user);
+        score.setStudent(student);
         score.setRepoQualityScore(repoQuality);
         score.setAlgorithmScore(algorithmScore);
         score.setAiPenalty(aiPenalty);
@@ -47,7 +47,7 @@ public class ScoreCalculationService {
         finalScoreRepository.saveAll(scores);
     }
     public Optional<FinalScore> getUserScore(Long userId) {
-        return finalScoreRepository.findByUserId(userId);
+        return finalScoreRepository.findByStudentId(userId);
     }
     public List<FinalScore> getLeaderboard(int limit, int offset) {
         return finalScoreRepository.findLeaderboard(PageRequest.of(offset / limit, limit));

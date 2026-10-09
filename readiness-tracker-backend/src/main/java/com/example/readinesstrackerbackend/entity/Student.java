@@ -26,10 +26,21 @@ public class Student {
     private Double currentGpa;
     @Column(nullable = true)
     private String githubUsername;
+    @Column(nullable = true, unique = true)
+    private Long githubId;
+    @Column(length = 1000)
+    private String githubToken;
+    @Column(length = 500)
+    private String avatarUrl;
+    @Column
+    private Integer followers = 0;
+
     @Column(nullable = true)
     private String linkedinUrl;
     @Column(nullable = true)
     private String facebookUrl;
+    @Column(nullable = true)
+    private Integer batchYear;
     @Column(name = "created_at")
     private Long createdAt;
     @Column(name = "latest_ai_overall_score")

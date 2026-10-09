@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.example.readinesstrackerbackend.entity.FinalScore;
-import com.example.readinesstrackerbackend.model.User;
+import com.example.readinesstrackerbackend.entity.Student;
 import com.example.readinesstrackerbackend.repository.FinalScoreRepository;
-import com.example.readinesstrackerbackend.repository.UserRepository;
+import com.example.readinesstrackerbackend.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 @RestController
@@ -21,17 +21,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ScoresController {
     private final FinalScoreRepository finalScoreRepository;
-    private final UserRepository userRepository;
+    private final StudentRepository studentRepository;
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getUserScores(@PathVariable Long userId) {
         try {
             log.info("Fetching scores for user: {}", userId);
-            Optional<User> userOpt = userRepository.findById(userId);
+            Optional<Student> userOpt = studentRepository.findById(userId);
             if (userOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ErrorResponse("User not found"));
             }
-            Optional<FinalScore> scoreOpt = finalScoreRepository.findByUser(userOpt.get());
+            Optional<FinalScore> scoreOpt = finalScoreRepository.findByStudent(userOpt.get());
             if (scoreOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ErrorResponse("No scores available for this user yet"));
@@ -40,7 +40,7 @@ public class ScoresController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("userId", userId);
-            response.put("username", score.getUser().getUsername());
+            response.put("username", score.getStudent().getGithubUsername());
             response.put("rank", score.getRank());
             response.put("percentile", score.getPercentile());
 
@@ -82,7 +82,7 @@ public class ScoresController {
                 .map(score -> {
                     Map<String, Object> entry = new HashMap<>();
                     entry.put("rank", score.getRank());
-                    entry.put("username", score.getUser().getUsername());
+                    entry.put("username", score.getStudent().getGithubUsername());
                     entry.put("final_score", score.getFinalScore());
                     entry.put("percentage", String.format("%.1f%%", (score.getFinalScore() != null ? score.getFinalScore() * 100 : 0)));
                     entry.put("codellama_quality", score.getRepoQuality7b());
@@ -106,14 +106,14 @@ public class ScoresController {
     public ResponseEntity<?> compareScores(@PathVariable Long userId1, @PathVariable Long userId2) {
         try {
             log.info("Comparing scores between users: {} and {}", userId1, userId2);
-            Optional<User> user1Opt = userRepository.findById(userId1);
-            Optional<User> user2Opt = userRepository.findById(userId2);
+            Optional<Student> user1Opt = studentRepository.findById(userId1);
+            Optional<Student> user2Opt = studentRepository.findById(userId2);
             if (user1Opt.isEmpty() || user2Opt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ErrorResponse("One or both users not found"));
             }
-            Optional<FinalScore> score1Opt = finalScoreRepository.findByUser(user1Opt.get());
-            Optional<FinalScore> score2Opt = finalScoreRepository.findByUser(user2Opt.get());
+            Optional<FinalScore> score1Opt = finalScoreRepository.findByStudent(user1Opt.get());
+            Optional<FinalScore> score2Opt = finalScoreRepository.findByStudent(user2Opt.get());
             if (score1Opt.isEmpty() || score2Opt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ErrorResponse("Scores not available for one or both users"));
@@ -121,7 +121,7 @@ public class ScoresController {
             FinalScore score1 = score1Opt.get();
             FinalScore score2 = score2Opt.get();
             Map<String, Object> user1Data = new HashMap<>();
-            user1Data.put("username", score1.getUser().getUsername());
+            user1Data.put("username", score1.getStudent().getGithubUsername());
             user1Data.put("final_score", score1.getFinalScore());
             user1Data.put("codellama_7b", score1.getRepoQuality7b());
             user1Data.put("qwen_3b", score1.getRepoQuality3b());
@@ -129,7 +129,7 @@ public class ScoresController {
             user1Data.put("security", score1.getSecurity());
             user1Data.put("rank", score1.getRank());
             Map<String, Object> user2Data = new HashMap<>();
-            user2Data.put("username", score2.getUser().getUsername());
+            user2Data.put("username", score2.getStudent().getGithubUsername());
             user2Data.put("final_score", score2.getFinalScore());
             user2Data.put("codellama_7b", score2.getRepoQuality7b());
             user2Data.put("qwen_3b", score2.getRepoQuality3b());

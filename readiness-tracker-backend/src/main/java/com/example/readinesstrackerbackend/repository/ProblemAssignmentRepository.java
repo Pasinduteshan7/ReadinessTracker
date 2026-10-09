@@ -8,6 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface ProblemAssignmentRepository extends JpaRepository<ProblemAssignment, Long> {
-    Optional<ProblemAssignment> findByUserId(Long userId);
-    boolean existsByUserId(Long userId);
+    Optional<ProblemAssignment> findByStudentId(Long studentId);
+    boolean existsByStudentId(Long studentId);
 }
