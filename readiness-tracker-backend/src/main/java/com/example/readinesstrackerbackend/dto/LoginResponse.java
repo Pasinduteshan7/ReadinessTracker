@@ -10,6 +10,7 @@ public class LoginResponse {
     private String name;
     private String registrationNumber;
     private String currentYear;
+    private String skills;
     private Double currentGpa;
     private String githubUsername;
     private String linkedinUrl;
@@ -22,6 +23,7 @@ public class LoginResponse {
         this.name = student.getName();
         this.registrationNumber = student.getRegistrationNumber();
         this.currentYear = student.getCurrentYear();
+        this.skills = student.getSkills();
         this.currentGpa = student.getCurrentGpa();
         this.githubUsername = student.getGithubUsername();
         this.linkedinUrl = student.getLinkedinUrl();
@@ -82,6 +84,14 @@ public class LoginResponse {
 
     public void setCurrentYear(String currentYear) {
         this.currentYear = currentYear;
+    }
+
+    public String getSkills() {
+        return skills;
+    }
+
+    public void setSkills(String skills) {
+        this.skills = skills;
     }
 
     public Double getCurrentGpa() {

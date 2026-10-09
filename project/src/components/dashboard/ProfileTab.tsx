@@ -8,6 +8,7 @@ interface Student {
   email: string;
   registrationNumber: string;
   currentYear: string;
+  skills?: string;
   currentGpa: number;
   githubUsername?: string;
   linkedinUrl?: string;
@@ -27,6 +28,7 @@ export function ProfileTab({ currentUser }: ProfileTabProps) {
       githubUsername: currentUser.githubUsername || '',
       linkedinUrl: currentUser.linkedinUrl || '',
       currentYear: currentUser.currentYear || '',
+      skills: currentUser.skills || '',
       currentGpa: currentUser.currentGpa || 0,
     } : {}
   );
@@ -51,14 +53,17 @@ export function ProfileTab({ currentUser }: ProfileTabProps) {
       const response = await studentApi.updateStudent(currentUser.id, formData);
       
       // Update localStorage with new data
-      localStorage.setItem('user', JSON.stringify(response.token ? response : response));
+      localStorage.setItem('user', JSON.stringify(response));
+      if (typeof response.token === 'string' && response.token.trim()) {
+        localStorage.setItem('token', response.token);
+      }
       
       // Update parent state by reloading
       window.location.reload();
       
       setIsEditing(false);
-    } catch (err: any) {
-      setError(err.message || 'Failed to update profile');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -70,6 +75,7 @@ export function ProfileTab({ currentUser }: ProfileTabProps) {
       githubUsername: currentUser.githubUsername || '',
       linkedinUrl: currentUser.linkedinUrl || '',
       currentYear: currentUser.currentYear || '',
+      skills: currentUser.skills || '',
       currentGpa: currentUser.currentGpa || 0,
     });
     setError('');
@@ -127,6 +133,10 @@ export function ProfileTab({ currentUser }: ProfileTabProps) {
             <label className="text-sm text-slate-600">LinkedIn</label>
             <p className="text-lg font-semibold text-slate-900">{currentUser.linkedinUrl || 'Not provided'}</p>
           </div>
+          <div className="md:col-span-2">
+            <label className="text-sm text-slate-600">Skills</label>
+            <p className="text-lg font-semibold text-slate-900">{currentUser.skills || 'No skills added yet'}</p>
+          </div>
         </div>
       ) : (
         // Editable view
@@ -181,6 +191,19 @@ export function ProfileTab({ currentUser }: ProfileTabProps) {
                 placeholder="https://linkedin.com/in/username"
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </div>
+            <div className="md:col-span-2">
+              <label htmlFor="skills" className="block text-sm font-medium text-slate-700 mb-1">Skills</label>
+              <textarea
+                id="skills"
+                name="skills"
+                value={formData.skills || ''}
+                onChange={handleInputChange}
+                rows={3}
+                placeholder="Python, React, Docker, MySQL"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="mt-1 text-sm text-slate-500">Enter skills separated by commas. These are saved to your student profile and used for Industry Demand matching.</p>
             </div>
           </div>
 

@@ -18,6 +18,7 @@ interface Student {
   email: string;
   registrationNumber: string;
   currentYear: string;
+  skills?: string;
   currentGpa: number;
   githubUsername?: string;
   linkedinUrl?: string;
@@ -73,6 +74,7 @@ export function StudentDashboard() {
   };
   const handleSignOut = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     window.location.href = '/';
   };
   const handleAnalyzeGitHub = async (githubUsername: string) => {
