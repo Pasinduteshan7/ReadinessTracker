@@ -57,8 +57,10 @@ public class IndustrySkillService {
             }
 
             skillToSave.setLastUpdated(LocalDateTime.now());
-            savedList.add(industrySkillRepository.saveAndFlush(skillToSave));
+            savedList.add(skillToSave);
         }
+
+        savedList = industrySkillRepository.saveAll(savedList);
 
         log.info("Successfully upserted {} industry skills", savedList.size());
         return savedList;

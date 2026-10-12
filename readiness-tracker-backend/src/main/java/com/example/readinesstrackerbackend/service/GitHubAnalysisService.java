@@ -1,9 +1,13 @@
 package com.example.readinesstrackerbackend.service;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.example.readinesstrackerbackend.dto.AnalysisRequestDTO;
@@ -26,6 +30,7 @@ public class GitHubAnalysisService {
     private final StudentService studentService;
     private final PythonBridgeService pythonBridgeService;
     private final GitHubApiClient gitHubApiClient;
+    private final IndustryDemandService industryDemandService;
     public AnalysisJob startAnalysis(AnalysisRequestDTO request) {
         log.info("Starting analysis for: {} (Student ID: {})", request.getGithubUsername(), request.getUserId());
 
@@ -328,6 +333,31 @@ public class GitHubAnalysisService {
             log.info("   Code Quality: {}", String.format("%.2f", codeQualityScore));
             log.info("   Architecture Quality: {}", String.format("%.2f", architectureScore));
             analysisJobRepository.save(job);
+
+            // Auto-extract verified skills from GitHub repositories and persist Industry Readiness to Supabase
+            if (job.getStudent() != null) {
+                try {
+                    Set<String> githubSkills = extractSkillsFromRepositories(allRepositories);
+                    if (!githubSkills.isEmpty()) {
+                        Student student = job.getStudent();
+                        Set<String> mergedSkills = new LinkedHashSet<>(githubSkills);
+                        if (student.getSkills() != null && !student.getSkills().isBlank()) {
+                            Arrays.stream(student.getSkills().split(","))
+                                    .map(String::trim)
+                                    .filter(s -> !s.isEmpty())
+                                    .forEach(mergedSkills::add);
+                        }
+                        student.setSkills(String.join(", ", mergedSkills));
+                        studentRepository.save(student);
+
+                        // Recalculate and persist directly to student_industry_readiness in Supabase
+                        industryDemandService.calculateAndSaveMatch(student);
+                        log.info("✅ Auto-synced GitHub skills to student profile and persisted Industry Readiness in Supabase: {}", mergedSkills);
+                    }
+                } catch (Exception se) {
+                    log.warn("Could not auto-sync GitHub skills to student: {}", se.getMessage());
+                }
+            }
         } catch (Exception e) {
             log.error("❌ Error during intelligent analysis: {}", e.getMessage(), e);
             log.error("❌ Exception class: {}", e.getClass().getName());
@@ -388,4 +418,70 @@ public class GitHubAnalysisService {
         log.info("🔍 Validating GitHub token in service...");
         return gitHubApiClient.validateToken(token);
     }
+
+    /**
+     * Extracts programming languages and framework skills from all GitHub repositories.
+     */
+    private Set<String> extractSkillsFromRepositories(List<Map<String, Object>> allRepositories) {
+        Set<String> detectedSkills = new LinkedHashSet<>();
+        if (allRepositories == null || allRepositories.isEmpty()) {
+            return detectedSkills;
+        }
+
+        // Map keyword variations to canonical industry skill names
+        Map<String, String> keywordToSkill = Map.ofEntries(
+            Map.entry("react", "React"),
+            Map.entry("reactjs", "React"),
+            Map.entry("spring", "Spring Boot"),
+            Map.entry("springboot", "Spring Boot"),
+            Map.entry("spring-boot", "Spring Boot"),
+            Map.entry("nextjs", "Next.js"),
+            Map.entry("next.js", "Next.js"),
+            Map.entry("vue", "Vue"),
+            Map.entry("vuejs", "Vue"),
+            Map.entry("angular", "Angular"),
+            Map.entry("node", "Node.js"),
+            Map.entry("nodejs", "Node.js"),
+            Map.entry("express", "Express"),
+            Map.entry("fastapi", "FastAPI"),
+            Map.entry("flask", "Flask"),
+            Map.entry("django", "Django"),
+            Map.entry("docker", "Docker"),
+            Map.entry("kubernetes", "Kubernetes"),
+            Map.entry("aws", "AWS"),
+            Map.entry("android", "Android"),
+            Map.entry("ios", "iOS"),
+            Map.entry("swift", "Swift"),
+            Map.entry("flutter", "Flutter"),
+            Map.entry("react-native", "React Native"),
+            Map.entry("mongodb", "MongoDB"),
+            Map.entry("postgres", "PostgreSQL"),
+            Map.entry("postgresql", "PostgreSQL"),
+            Map.entry("mysql", "MySQL"),
+            Map.entry("redis", "Redis"),
+            Map.entry("graphql", "GraphQL"),
+            Map.entry("tailwind", "Tailwind")
+        );
+
+        for (Map<String, Object> repo : allRepositories) {
+            // 1. Primary Language from repository
+            Object langObj = repo.get("language");
+            if (langObj != null && !langObj.toString().isBlank() && !"unknown".equalsIgnoreCase(langObj.toString())) {
+                detectedSkills.add(langObj.toString().trim());
+            }
+
+            // 2. Technologies identified from repository name & description
+            String name = repo.getOrDefault("name", "").toString().toLowerCase(Locale.ROOT);
+            String desc = repo.getOrDefault("description", "").toString().toLowerCase(Locale.ROOT);
+            String combinedText = name + " " + desc;
+
+            for (Map.Entry<String, String> entry : keywordToSkill.entrySet()) {
+                if (combinedText.contains(entry.getKey())) {
+                    detectedSkills.add(entry.getValue());
+                }
+            }
+        }
+        return detectedSkills;
+    }
 }
+

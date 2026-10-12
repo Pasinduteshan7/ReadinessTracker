@@ -57,13 +57,18 @@ start "AI Engine" cmd /k "cd /d "%~dp0readiness-tracker-backend\github-service\a
 timeout /t 5 /nobreak
 
 REM Start Backend
-echo 2️⃣  Starting Backend (Spring Boot on port 8080)...
-start "Backend" cmd /k "cd /d "%~dp0readiness-tracker-backend" && gradlew bootRun"
+echo 2️⃣  Starting Backend (Spring Boot on port 8080 - Supabase connected)...
+start "Backend" cmd /k "cd /d "%~dp0readiness-tracker-backend" && (for /f "usebackq tokens=1* delims==" %%A in (".env") do if not "%%A"=="" set "%%A=%%B") && gradlew bootRun"
 timeout /t 5 /nobreak
 
 REM Start Frontend
 echo 3️⃣  Starting Frontend (React on port 5173)...
 start "Frontend" cmd /k "cd /d "%~dp0project" && npm run dev"
+timeout /t 5 /nobreak
+
+REM Start Industry Demand Scraper
+echo 4️⃣  Starting Industry Demand Data Sync...
+start "Industry Demand Scraper" cmd /k "cd /d "%~dp0readiness-tracker-backend\industry-demand-service" && pip install -r requirements.txt && python collect_jobs.py"
 
 echo.
 echo ✅ All services starting...

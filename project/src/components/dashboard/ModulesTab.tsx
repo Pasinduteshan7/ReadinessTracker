@@ -26,6 +26,7 @@ interface Student {
 
 interface ModulesTabProps {
   currentUser: Student | null;
+  initialData?: any;
 }
 
 interface ModuleItem {
@@ -119,32 +120,51 @@ const SPECIALIZATION_DETAILS: Record<string, { advice: string; skills: string[];
   },
 };
 
-export function ModulesTab({ currentUser }: ModulesTabProps) {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+export function ModulesTab({ currentUser, initialData }: ModulesTabProps) {
+  const [data, setData] = useState<any>(initialData || null);
+  const [loading, setLoading] = useState(initialData ? false : true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   useEffect(() => {
-    if (currentUser?.id) {
-      loadMarks();
-    } else {
+    if (initialData && initialData.studentId) {
+      setData(initialData);
       setLoading(false);
+      return;
     }
-  }, [currentUser]);
 
-  const loadMarks = async () => {
-    if (!currentUser?.id) return;
-    try {
-      setLoading(true);
-      const res = await moduleMarksApi.getStudentMarks(currentUser.id);
-      setData(res && res.studentId ? res : null);
-    } catch (err) {
-      console.error('Failed to load module marks:', err);
-      setData(null);
-    } finally {
+    let isMounted = true;
+    const studentId = currentUser?.id;
+
+    if (!studentId) {
       setLoading(false);
+      return;
     }
-  };
+
+    const loadMarks = async () => {
+      try {
+        setLoading(true);
+        const res = await moduleMarksApi.getStudentMarks(studentId);
+        if (isMounted) {
+          setData(res && res.studentId ? res : null);
+        }
+      } catch (err) {
+        console.error('Failed to load module marks:', err);
+        if (isMounted) {
+          setData(null);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadMarks();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser?.id, initialData]);
 
   if (loading) {
     return (
