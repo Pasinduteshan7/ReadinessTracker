@@ -1,0 +1,58 @@
+{
+  "AI/ML Engineering": {
+    "titles": ["Machine Learning Engineer", "AI Engineer", "ML Engineer", "Deep Learning Engineer"],
+    "required_skills": ["python", "tensorflow", "pytorch", "scikit-learn", "sql", "git", "docker", "rest api", "numpy", "pandas"],
+    "nice_to_have": ["kubernetes", "aws", "mlops", "llm", "transformers", "hugging face"],
+    "typical_projects": ["Image classification model", "NLP chatbot", "Recommendation system", "End-to-end ML pipeline"],
+    "entry_level_requirements": "Bachelor's in CS/Engineering + 1-2 ML projects on GitHub + Python fluency"
+  },
+  "Data Science": {
+    "titles": ["Data Scientist", "Data Analyst", "Business Intelligence Analyst"],
+    "required_skills": ["python", "sql", "pandas", "numpy", "matplotlib", "statistics", "jupyter"],
+    "nice_to_have": ["tableau", "power bi", "spark", "scikit-learn", "excel"],
+    "typical_projects": ["Customer churn prediction", "Sales dashboard", "A/B test analysis"],
+    "entry_level_requirements": "Statistics + Python + SQL + 1-2 data projects"
+  },
+  "Software Engineering": {
+    "titles": ["Software Engineer", "Backend Developer", "Full Stack Developer"],
+    "required_skills": ["java", "python", "git", "sql", "rest api", "data structures", "algorithms", "oop"],
+    "nice_to_have": ["docker", "kubernetes", "aws", "microservices", "ci/cd"],
+    "typical_projects": ["E-commerce backend", "Task management API", "Full-stack web app"],
+    "entry_level_requirements": "CS degree + strong DSA + 2-3 projects + internship"
+  },
+  "Web Development": {
+    "titles": ["Frontend Developer", "Full Stack Developer", "Web Developer"],
+    "required_skills": ["html", "css", "javascript", "react", "git", "rest api", "node.js"],
+    "nice_to_have": ["typescript", "next.js", "tailwind", "graphql", "docker"],
+    "typical_projects": ["Portfolio website", "E-commerce UI", "Blog platform"],
+    "entry_level_requirements": "Portfolio with 3+ live projects + modern stack"
+  },
+  "Mobile Development": {
+    "titles": ["Android Developer", "iOS Developer", "Flutter Developer"],
+    "required_skills": ["flutter", "react native", "android", "ios", "git"],
+    "nice_to_have": ["firebase", "rest api", "sqlite", "kotlin", "swift"],
+    "typical_projects": ["Todo app with backend", "E-commerce mobile app", "Chat app"],
+    "entry_level_requirements": "1-2 published apps + mobile UI/UX knowledge"
+  },
+  "Cloud/DevOps": {
+    "titles": ["DevOps Engineer", "Cloud Engineer", "Site Reliability Engineer"],
+    "required_skills": ["linux", "docker", "kubernetes", "aws", "git", "ci/cd", "bash"],
+    "nice_to_have": ["terraform", "jenkins", "prometheus", "grafana", "azure", "gcp"],
+    "typical_projects": ["CI/CD pipeline", "Container orchestration", "Infrastructure as code"],
+    "entry_level_requirements": "AWS/Azure cert + Linux + Docker/K8s hands-on"
+  },
+  "Networking": {
+    "titles": ["Network Engineer", "Network Administrator", "NOC Engineer"],
+    "required_skills": ["tcp/ip", "routing", "switching", "cisco", "firewall", "vpn"],
+    "nice_to_have": ["ccna", "ccnp", "wireshark", "linux", "python"],
+    "typical_projects": ["Enterprise network design", "VPN setup", "Network monitoring"],
+    "entry_level_requirements": "CCNA cert + lab experience"
+  },
+  "Cybersecurity": {
+    "titles": ["Security Analyst", "Penetration Tester", "SOC Analyst"],
+    "required_skills": ["cybersecurity", "linux", "networking", "wireshark", "python"],
+    "nice_to_have": ["kali linux", "metasploit", "burp suite", "ceh", "security+"],
+    "typical_projects": ["Vulnerability assessment", "CTF participation", "Home lab setup"],
+    "entry_level_requirements": "Security+ or CEH + hands-on lab + CTF experience"
+  }
+}

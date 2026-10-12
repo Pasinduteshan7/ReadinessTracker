@@ -1,0 +1,29 @@
+# ===== BACKEND (Python) =====
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/uploads/*.pdf
+backend/uploads/*.PDF
+backend/data/employability.db
+backend/.env
+
+# ===== FRONTEND (React) =====
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ===== SECRETS =====
+.env
+.env.local
+*.key
+*.pem
+
+# ===== IDE / OS =====
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ===== LOGS =====
+*.log
