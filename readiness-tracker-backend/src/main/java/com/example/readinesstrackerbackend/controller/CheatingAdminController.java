@@ -27,9 +27,9 @@ public class CheatingAdminController {
                 .map(flags -> {
                     Map<String, Object> item = new HashMap<>();
                     item.put("id", flags.getId());
-                    item.put("userId", flags.getSubmission().getUserId());
+                    item.put("userId", flags.getSubmission().getStudentId());
                     item.put("challengeId", flags.getSubmission().getChallenge().getId());
-                    item.put("username", flags.getSubmission().getUserId());
+                    item.put("username", flags.getSubmission().getStudentId());
                     item.put("submittedAt", flags.getSubmission().getSubmittedAt());
                     item.put("pasteAttempts", flags.getPasteAttempts());
                     item.put("tabSwitches", flags.getTabSwitches());

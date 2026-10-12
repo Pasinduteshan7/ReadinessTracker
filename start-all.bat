@@ -48,14 +48,22 @@ echo [1/5] Starting AI Engine (Python/FastAPI on port 8000)...
 start "AI Engine" cmd /k "cd /d "%~dp0readiness-tracker-backend\github-service\ai_engine_with_fine_tuned_llm" && start.bat"
 timeout /t 5 /nobreak >nul
 
+<<<<<<< HEAD
 REM === 2. Backend (Spring Boot on port 8080) ===
 echo [2/5] Starting Backend (Spring Boot on port 8080)...
 start "Backend" cmd /k "cd /d "%~dp0readiness-tracker-backend" && gradlew bootRun"
 timeout /t 5 /nobreak >nul
+=======
+REM Start Backend
+echo 2️⃣  Starting Backend (Spring Boot on port 8080 - Supabase connected)...
+start "Backend" cmd /k "cd /d "%~dp0readiness-tracker-backend" && (for /f "usebackq tokens=1* delims==" %%A in (".env") do if not "%%A"=="" set "%%A=%%B") && gradlew bootRun"
+timeout /t 5 /nobreak
+>>>>>>> origin/main
 
 REM === 3. Frontend (React on port 5173) ===
 echo [3/5] Starting Frontend (React on port 5173)...
 start "Frontend" cmd /k "cd /d "%~dp0project" && npm run dev"
+<<<<<<< HEAD
 timeout /t 3 /nobreak >nul
 
 REM === 4. Employability Backend (FastAPI on port 8001) ===
@@ -66,6 +74,13 @@ timeout /t 5 /nobreak >nul
 REM === 5. Employability Frontend (React on port 5174) ===
 echo [5/5] Starting Employability Frontend (React on port 5174)...
 start "Employability Frontend" cmd /k "cd /d "%~dp0employability-tracker\frontend" && npm run dev -- --port 5174"
+=======
+timeout /t 5 /nobreak
+
+REM Start Industry Demand Scraper
+echo 4️⃣  Starting Industry Demand Data Sync...
+start "Industry Demand Scraper" cmd /k "cd /d "%~dp0readiness-tracker-backend\industry-demand-service" && pip install -r requirements.txt && python collect_jobs.py"
+>>>>>>> origin/main
 
 echo.
 echo ========================================

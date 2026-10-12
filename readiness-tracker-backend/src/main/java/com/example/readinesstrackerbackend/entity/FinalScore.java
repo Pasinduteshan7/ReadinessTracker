@@ -1,6 +1,5 @@
 package com.example.readinesstrackerbackend.entity;
 import java.time.LocalDateTime;
-import com.example.readinesstrackerbackend.model.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -25,8 +24,8 @@ public class FinalScore {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @OneToOne
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private User user;
+    @JoinColumn(name = "student_id", nullable = false, unique = true)
+    private Student student;
 
     private Double githubScore;
     private Double repoQualityScore;

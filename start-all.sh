@@ -55,8 +55,11 @@ open -a Terminal "$READINESS_DIR/readiness-tracker-backend/github-service/ai_eng
 sleep 2
 
 # Start Backend
-echo "2️⃣  Starting Backend (Spring Boot on port 8080)..."
+echo "2️⃣  Starting Backend (Spring Boot on port 8080 - Supabase connected)..."
 cd "$READINESS_DIR/readiness-tracker-backend"
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
 ./gradlew bootRun &
 BACKEND_PID=$!
 sleep 3

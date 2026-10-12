@@ -205,3 +205,15 @@ export const moduleMarksApi = {
     return response.json();
   },
 };
+
+export const industryDemandApi = {
+  getMatch: async (studentId: number, token?: string) => {
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(`${API_BASE}/industry-demand/${studentId}`, { headers });
+    if (!response.ok) throw new Error('Failed to fetch industry demand');
+    return response.json();
+  },
+};

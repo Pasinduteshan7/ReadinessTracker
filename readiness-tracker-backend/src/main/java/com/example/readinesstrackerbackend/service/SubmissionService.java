@@ -24,7 +24,7 @@ public class SubmissionService {
             .orElseThrow(() -> new RuntimeException("Challenge not found: " + challengeId));
         
         ChallengeSubmission submission = new ChallengeSubmission();
-        submission.setUserId(userId);
+        submission.setStudentId(userId);
         submission.setChallenge(challenge);
         submission.setCode(code);
         submission.setLanguage(language);
@@ -92,11 +92,11 @@ public class SubmissionService {
     }
     
     public Optional<ChallengeSubmission> getUserSubmission(Long userId, Long challengeId) {
-        return submissionRepository.findByUserIdAndChallenge_Id(userId, challengeId);
+        return submissionRepository.findByStudentIdAndChallenge_Id(userId, challengeId);
     }
     
     public Optional<ChallengeSubmission> getUserLatestSubmission(Long userId) {
-        return submissionRepository.findByUserId(userId);
+        return submissionRepository.findByStudentId(userId);
     }
     
     public List<ChallengeSubmission> getFlaggedSubmissions() {

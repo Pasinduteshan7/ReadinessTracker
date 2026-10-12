@@ -20,7 +20,7 @@ THE_MUSE_URL = "https://www.themuse.com/api/public/jobs"
 INDUSTRY_SKILLS_SYNC_URL = "http://localhost:8080/api/industry-skills/sync"
 REMOTIVE_CATEGORIES = ("software-dev", "data", "devops", "mobile", "testing")
 MUSE_CATEGORIES = ("Engineering", "Data Science", "IT")
-REQUEST_TIMEOUT_SECONDS = 25
+REQUEST_TIMEOUT_SECONDS = 60
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)

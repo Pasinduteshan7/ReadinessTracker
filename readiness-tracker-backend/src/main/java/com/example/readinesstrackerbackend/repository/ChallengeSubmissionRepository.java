@@ -9,8 +9,8 @@ import java.util.Optional;
 
 @Repository
 public interface ChallengeSubmissionRepository extends JpaRepository<ChallengeSubmission, Long> {
-    Optional<ChallengeSubmission> findByUserIdAndChallenge_Id(Long userId, Long challengeId);
-    Optional<ChallengeSubmission> findByUserId(Long userId);
+    Optional<ChallengeSubmission> findByStudentIdAndChallenge_Id(Long studentId, Long challengeId);
+    Optional<ChallengeSubmission> findByStudentId(Long studentId);
     List<ChallengeSubmission> findByIsFlagged(Boolean isFlagged);
-    List<ChallengeSubmission> findByUserIdOrderBySubmittedAtDesc(Long userId);
+    List<ChallengeSubmission> findByStudentIdOrderBySubmittedAtDesc(Long studentId);
 }

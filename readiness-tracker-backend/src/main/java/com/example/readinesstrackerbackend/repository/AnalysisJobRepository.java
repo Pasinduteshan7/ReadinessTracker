@@ -10,11 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.readinesstrackerbackend.entity.AnalysisJob;
 @Repository
 public interface AnalysisJobRepository extends JpaRepository<AnalysisJob, Long> {
-    Optional<AnalysisJob> findByIdAndUserId(Long id, Long userId);
-    List<AnalysisJob> findByUserId(Long userId);
+    Optional<AnalysisJob> findByIdAndStudentId(Long id, Long studentId);
+    List<AnalysisJob> findByStudentId(Long studentId);
     List<AnalysisJob> findByStatus(AnalysisJob.JobStatus status);
     Optional<AnalysisJob> findByJobId(String jobId);
-    Optional<AnalysisJob> findFirstByGithubUsernameAndUserIdOrderByCreatedAtDesc(String githubUsername, Long userId);
+    Optional<AnalysisJob> findFirstByGithubUsernameAndStudentIdOrderByCreatedAtDesc(String githubUsername, Long studentId);
     List<AnalysisJob> findByGithubUsernameOrderByCreatedAtDesc(String githubUsername);
     
     @Modifying

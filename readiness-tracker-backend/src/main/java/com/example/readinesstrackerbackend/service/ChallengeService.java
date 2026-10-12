@@ -20,8 +20,8 @@ public class ChallengeService {
     private final Random random = new Random();
     
     public AlgorithmChallenge assignRandomProblem(Long userId, String difficulty) {
-        if (assignmentRepository.existsByUserId(userId)) {
-            Optional<ProblemAssignment> existing = assignmentRepository.findByUserId(userId);
+        if (assignmentRepository.existsByStudentId(userId)) {
+            Optional<ProblemAssignment> existing = assignmentRepository.findByStudentId(userId);
             if (existing.isPresent()) {
                 return existing.get().getChallenge();
             }
@@ -38,7 +38,7 @@ public class ChallengeService {
             availableChallenges.get(random.nextInt(availableChallenges.size()));
         
         ProblemAssignment assignment = new ProblemAssignment();
-        assignment.setUserId(userId);
+        assignment.setStudentId(userId);
         assignment.setChallenge(selectedChallenge);
         assignment.setDifficulty(difficulty);
         assignmentRepository.save(assignment);
@@ -61,11 +61,11 @@ public class ChallengeService {
     }
     
     public ProblemAssignment getUserAssignment(Long userId) {
-        return assignmentRepository.findByUserId(userId)
+        return assignmentRepository.findByStudentId(userId)
             .orElseThrow(() -> new RuntimeException("No assignment found for user: " + userId));
     }
     
     public Optional<ProblemAssignment> findUserAssignment(Long userId) {
-        return assignmentRepository.findByUserId(userId);
+        return assignmentRepository.findByStudentId(userId);
     }
 }
