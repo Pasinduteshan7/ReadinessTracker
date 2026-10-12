@@ -59,9 +59,9 @@ public class LeaderboardController {
     }
     private LeaderboardEntryDTO mapToDTO(FinalScore score) {
         return new LeaderboardEntryDTO(
-                score.getUser() != null ? score.getUser().getId() : null,
-                score.getUser() != null ? score.getUser().getGithubUsername() : "Unknown",
-                score.getUser() != null ? score.getUser().getAvatarUrl() : null,
+                score.getStudent() != null ? score.getStudent().getId() : null,
+                score.getStudent() != null ? score.getStudent().getGithubUsername() : "Unknown",
+                score.getStudent() != null ? score.getStudent().getAvatarUrl() : null,
                 score.getFinalScore(),
                 score.getRank(),
                 score.getPercentile()

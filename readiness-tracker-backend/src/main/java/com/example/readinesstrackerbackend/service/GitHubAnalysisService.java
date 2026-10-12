@@ -1,9 +1,13 @@
 package com.example.readinesstrackerbackend.service;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.example.readinesstrackerbackend.dto.AnalysisRequestDTO;
@@ -11,11 +15,10 @@ import com.example.readinesstrackerbackend.dto.AnalysisResultsDTO;
 import com.example.readinesstrackerbackend.dto.AnalysisResultsDTO.RepositoryDetail;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.readinesstrackerbackend.entity.AnalysisJob;
+import com.example.readinesstrackerbackend.entity.RepositoryAnalysis;
 import com.example.readinesstrackerbackend.entity.Student;
-import com.example.readinesstrackerbackend.model.User;
 import com.example.readinesstrackerbackend.repository.AnalysisJobRepository;
 import com.example.readinesstrackerbackend.repository.StudentRepository;
-import com.example.readinesstrackerbackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 @Service
@@ -24,10 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 public class GitHubAnalysisService {
     private final AnalysisJobRepository analysisJobRepository;
     private final StudentRepository studentRepository;
-    private final UserRepository userRepository;
     private final StudentService studentService;
     private final PythonBridgeService pythonBridgeService;
     private final GitHubApiClient gitHubApiClient;
+    private final IndustryDemandService industryDemandService;
     public AnalysisJob startAnalysis(AnalysisRequestDTO request) {
         log.info("Starting analysis for: {} (Student ID: {})", request.getGithubUsername(), request.getUserId());
 
@@ -53,22 +56,8 @@ public class GitHubAnalysisService {
         Student student = studentOpt.get();
         log.info("Found student: {} with GitHub username: {}", student.getName(), student.getGithubUsername());
 
-        Optional<User> userOpt = userRepository.findByGithubUsername(request.getGithubUsername());
-        User user;
-        if (userOpt.isPresent()) {
-            user = userOpt.get();
-            log.info("Found existing User for GitHub analysis: {}", user.getId());
-        } else {
-
-            user = new User();
-            user.setGithubUsername(request.getGithubUsername());
-            user.setEmail(student.getEmail());
-
-            user = userRepository.save(user);
-            log.info("Created new User for GitHub analysis: {}", user.getId());
-        }
         AnalysisJob job = new AnalysisJob();
-        job.setUser(user);
+        
         job.setStudent(student);
         job.setStatus(AnalysisJob.JobStatus.PENDING);
         job.setProgress(0);
@@ -103,14 +92,14 @@ public class GitHubAnalysisService {
             analysisJobRepository.save(job);
 
             // Debug: Check User and githubUsername
-            if (job.getUser() == null) {
+            if (job.getStudent() == null) {
                 log.error("❌ CRITICAL: AnalysisJob user is null! JobId: {}", jobId);
                 throw new IllegalStateException("User not associated with AnalysisJob");
             }
             
-            String githubUsername = job.getUser().getGithubUsername();
+            String githubUsername = job.getStudent().getGithubUsername();
             if (githubUsername == null || githubUsername.isEmpty()) {
-                log.error("❌ CRITICAL: GitHub username is null or empty for user: {}", job.getUser().getId());
+                log.error("❌ CRITICAL: GitHub username is null or empty for user: {}", job.getStudent().getId());
                 throw new IllegalStateException("GitHub username not set for user");
             }
             log.info("✅ Using GitHub username: {}", githubUsername);
@@ -233,75 +222,108 @@ public class GitHubAnalysisService {
                     Double repoTestScore = ((Number) analysis.getOrDefault("testing", 0.0)).doubleValue();
                     Double bestPractices = ((Number) analysis.getOrDefault("best_practices", 0.0)).doubleValue();
                     
-                    RepositoryDetail detail = new RepositoryDetail();
+                                        RepositoryDetail detail = new RepositoryDetail();
                     detail.setName(repoName);
                     detail.setUrl((String) pythonRepoResult.getOrDefault("repo_url", ""));
                     detail.setScore(overallScore);
                     detail.setStars(stars);
                     detail.setForks(forks);
                     detail.setDescription(desc);
-                    
                     detail.setCodeQualityScore(codeQuality);
                     detail.setArchitectureScore(architecture);
                     detail.setDocumentationScore(repoDocScore);
                     detail.setTestingScore(repoTestScore);
                     detail.setBestPracticesScore(bestPractices);
-                    
                     if (!"unknown".equals(language)) {
                         detail.setLanguages(java.util.Collections.singletonList(language));
                     } else {
                         detail.setLanguages(new java.util.ArrayList<>());
                     }
-                    
                     detail.setQwenAnalysis(summary);
                     detail.setCodeLlamaAnalysis("");
                     detail.setNeuralScore(overallScore);
-                    
-                    // Assign tier based on score
-                    if (overallScore >= 80) {
-                        detail.setTier("TIER 1");
-                    } else if (overallScore >= 60) {
-                        detail.setTier("TIER 2");
-                    } else {
-                        detail.setTier("TIER 3");
-                    }
-                    
+                    if (overallScore >= 80) detail.setTier("TIER 1");
+                    else if (overallScore >= 60) detail.setTier("TIER 2");
+                    else detail.setTier("TIER 3");
                     repoDetails.add(detail);
+                    
+                    // Create Database Entity
+                    RepositoryAnalysis repoAnalysis = new RepositoryAnalysis();
+                    repoAnalysis.setAnalysisJob(job);
+                    repoAnalysis.setGithubUrl(detail.getUrl());
+                    repoAnalysis.setRepositoryName(detail.getName());
+                    repoAnalysis.setDescription(detail.getDescription());
+                    repoAnalysis.setStars(detail.getStars());
+                    repoAnalysis.setForks(detail.getForks());
+                    repoAnalysis.setLanguages(String.join(",", detail.getLanguages()));
+                    repoAnalysis.setTier(detail.getTier());
+                    repoAnalysis.setOverallScore(overallScore);
+                    repoAnalysis.setCodeQualityScore(codeQuality);
+                    repoAnalysis.setArchitectureScore(architecture);
+                    repoAnalysis.setDocumentationScore(repoDocScore);
+                    repoAnalysis.setTestingScore(repoTestScore);
+                    repoAnalysis.setBestPracticesScore(bestPractices);
+                    repoAnalysis.setQwenAnalysis(summary);
+                    
+                    job.getRepositories().add(repoAnalysis);
                 }
                 
-                resultsDTO.setTotalStars(totalStars);
+                                resultsDTO.setTotalStars(totalStars);
                 resultsDTO.setTotalForks(totalForks);
-                resultsDTO.setAverageLanguagesCount(selectedRepos.isEmpty() ? 0.0 : (double)totalLanguages / selectedRepos.size());
+                double avgLang = selectedRepos.isEmpty() ? 0.0 : (double)totalLanguages / selectedRepos.size();
+                resultsDTO.setAverageLanguagesCount(avgLang);
                 
                 resultsDTO.setCodeQualityScore(codeQualityScore);
                 resultsDTO.setArchitectureScore(architectureScore);
                 resultsDTO.setDocumentationScore(documentationScore);
                 resultsDTO.setTestingScore(testingScore);
                 
-                resultsDTO.setTier1Count((int) repoDetails.stream().filter(r -> "TIER 1".equals(r.getTier())).count());
-                resultsDTO.setTier2Count((int) repoDetails.stream().filter(r -> "TIER 2".equals(r.getTier())).count());
-                resultsDTO.setTier3Count((int) repoDetails.stream().filter(r -> "TIER 3".equals(r.getTier())).count());
+                int t1 = (int) repoDetails.stream().filter(r -> "TIER 1".equals(r.getTier())).count();
+                int t2 = (int) repoDetails.stream().filter(r -> "TIER 2".equals(r.getTier())).count();
+                int t3 = (int) repoDetails.stream().filter(r -> "TIER 3".equals(r.getTier())).count();
+                
+                resultsDTO.setTier1Count(t1);
+                resultsDTO.setTier2Count(t2);
+                resultsDTO.setTier3Count(t3);
                 
                 resultsDTO.setRepositories(repoDetails);
                 resultsDTO.setCompletedAt(LocalDateTime.now().toString());
 
                 // AI Employability Metrics
-                resultsDTO.setEmployabilityTier((String) dualAnalysisResult.getOrDefault("employability_tier", "Unknown"));
+                String empTier = (String) dualAnalysisResult.getOrDefault("employability_tier", "Unknown");
+                resultsDTO.setEmployabilityTier(empTier);
                 
+                double profR = 0.0;
                 Object profReady = dualAnalysisResult.get("professional_readiness");
                 if (profReady instanceof Number) {
-                    resultsDTO.setProfessionalReadiness(((Number) profReady).doubleValue());
+                    profR = ((Number) profReady).doubleValue();
+                    resultsDTO.setProfessionalReadiness(profR);
                 }
                 
+                double growthP = 0.0;
                 Object growthPot = dualAnalysisResult.get("growth_potential");
                 if (growthPot instanceof Number) {
-                    resultsDTO.setGrowthPotential(((Number) growthPot).doubleValue());
+                    growthP = ((Number) growthPot).doubleValue();
+                    resultsDTO.setGrowthPotential(growthP);
                 }
                 
-                resultsDTO.setRecommendedLevel((String) dualAnalysisResult.getOrDefault("recommended_level", "Unknown"));
+                String recLevel = (String) dualAnalysisResult.getOrDefault("recommended_level", "Unknown");
+                resultsDTO.setRecommendedLevel(recLevel);
 
                 ObjectMapper mapper = new ObjectMapper();
                 job.setResultsJson(mapper.writeValueAsString(resultsDTO));
+                
+                // SAVE METADATA TO DATABASE ENTITY
+                job.setEmployabilityTier(empTier);
+                job.setProfessionalReadiness(profR);
+                job.setGrowthPotential(growthP);
+                job.setRecommendedLevel(recLevel);
+                job.setTotalStars(totalStars);
+                job.setTotalForks(totalForks);
+                job.setTier1Count(t1);
+                job.setTier2Count(t2);
+                job.setTier3Count(t3);
+                job.setAverageLanguagesCount(avgLang);
                 log.info("✅ Analysis results stored");
             } catch (Exception je) {
                 log.warn("Could not store results JSON: {}", je.getMessage(), je);
@@ -311,6 +333,31 @@ public class GitHubAnalysisService {
             log.info("   Code Quality: {}", String.format("%.2f", codeQualityScore));
             log.info("   Architecture Quality: {}", String.format("%.2f", architectureScore));
             analysisJobRepository.save(job);
+
+            // Auto-extract verified skills from GitHub repositories and persist Industry Readiness to Supabase
+            if (job.getStudent() != null) {
+                try {
+                    Set<String> githubSkills = extractSkillsFromRepositories(allRepositories);
+                    if (!githubSkills.isEmpty()) {
+                        Student student = job.getStudent();
+                        Set<String> mergedSkills = new LinkedHashSet<>(githubSkills);
+                        if (student.getSkills() != null && !student.getSkills().isBlank()) {
+                            Arrays.stream(student.getSkills().split(","))
+                                    .map(String::trim)
+                                    .filter(s -> !s.isEmpty())
+                                    .forEach(mergedSkills::add);
+                        }
+                        student.setSkills(String.join(", ", mergedSkills));
+                        studentRepository.save(student);
+
+                        // Recalculate and persist directly to student_industry_readiness in Supabase
+                        industryDemandService.calculateAndSaveMatch(student);
+                        log.info("✅ Auto-synced GitHub skills to student profile and persisted Industry Readiness in Supabase: {}", mergedSkills);
+                    }
+                } catch (Exception se) {
+                    log.warn("Could not auto-sync GitHub skills to student: {}", se.getMessage());
+                }
+            }
         } catch (Exception e) {
             log.error("❌ Error during intelligent analysis: {}", e.getMessage(), e);
             log.error("❌ Exception class: {}", e.getClass().getName());
@@ -340,7 +387,7 @@ public class GitHubAnalysisService {
                 .orElseThrow(() -> new IllegalArgumentException("Job not found"));
     }
     public Optional<AnalysisJob> getLatestJobForUser(Long userId) {
-        return analysisJobRepository.findByUserId(userId).stream()
+        return analysisJobRepository.findByStudentId(userId).stream()
                 .max((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()));
     }
     public AnalysisJob getResultsByUsernameAndUserId(String username, Long userId) {
@@ -348,7 +395,7 @@ public class GitHubAnalysisService {
 
         if (userId != null) {
             Optional<AnalysisJob> jobOpt = analysisJobRepository
-                    .findFirstByGithubUsernameAndUserIdOrderByCreatedAtDesc(username, userId);
+                    .findFirstByGithubUsernameAndStudentIdOrderByCreatedAtDesc(username, userId);
             if (jobOpt.isPresent()) {
                 AnalysisJob job = jobOpt.get();
                 log.info("Found analysis job with status: {}", job.getStatus());
@@ -371,4 +418,70 @@ public class GitHubAnalysisService {
         log.info("🔍 Validating GitHub token in service...");
         return gitHubApiClient.validateToken(token);
     }
+
+    /**
+     * Extracts programming languages and framework skills from all GitHub repositories.
+     */
+    private Set<String> extractSkillsFromRepositories(List<Map<String, Object>> allRepositories) {
+        Set<String> detectedSkills = new LinkedHashSet<>();
+        if (allRepositories == null || allRepositories.isEmpty()) {
+            return detectedSkills;
+        }
+
+        // Map keyword variations to canonical industry skill names
+        Map<String, String> keywordToSkill = Map.ofEntries(
+            Map.entry("react", "React"),
+            Map.entry("reactjs", "React"),
+            Map.entry("spring", "Spring Boot"),
+            Map.entry("springboot", "Spring Boot"),
+            Map.entry("spring-boot", "Spring Boot"),
+            Map.entry("nextjs", "Next.js"),
+            Map.entry("next.js", "Next.js"),
+            Map.entry("vue", "Vue"),
+            Map.entry("vuejs", "Vue"),
+            Map.entry("angular", "Angular"),
+            Map.entry("node", "Node.js"),
+            Map.entry("nodejs", "Node.js"),
+            Map.entry("express", "Express"),
+            Map.entry("fastapi", "FastAPI"),
+            Map.entry("flask", "Flask"),
+            Map.entry("django", "Django"),
+            Map.entry("docker", "Docker"),
+            Map.entry("kubernetes", "Kubernetes"),
+            Map.entry("aws", "AWS"),
+            Map.entry("android", "Android"),
+            Map.entry("ios", "iOS"),
+            Map.entry("swift", "Swift"),
+            Map.entry("flutter", "Flutter"),
+            Map.entry("react-native", "React Native"),
+            Map.entry("mongodb", "MongoDB"),
+            Map.entry("postgres", "PostgreSQL"),
+            Map.entry("postgresql", "PostgreSQL"),
+            Map.entry("mysql", "MySQL"),
+            Map.entry("redis", "Redis"),
+            Map.entry("graphql", "GraphQL"),
+            Map.entry("tailwind", "Tailwind")
+        );
+
+        for (Map<String, Object> repo : allRepositories) {
+            // 1. Primary Language from repository
+            Object langObj = repo.get("language");
+            if (langObj != null && !langObj.toString().isBlank() && !"unknown".equalsIgnoreCase(langObj.toString())) {
+                detectedSkills.add(langObj.toString().trim());
+            }
+
+            // 2. Technologies identified from repository name & description
+            String name = repo.getOrDefault("name", "").toString().toLowerCase(Locale.ROOT);
+            String desc = repo.getOrDefault("description", "").toString().toLowerCase(Locale.ROOT);
+            String combinedText = name + " " + desc;
+
+            for (Map.Entry<String, String> entry : keywordToSkill.entrySet()) {
+                if (combinedText.contains(entry.getKey())) {
+                    detectedSkills.add(entry.getValue());
+                }
+            }
+        }
+        return detectedSkills;
+    }
 }
+

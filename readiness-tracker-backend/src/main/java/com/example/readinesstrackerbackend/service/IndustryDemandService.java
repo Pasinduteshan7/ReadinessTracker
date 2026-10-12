@@ -3,12 +3,16 @@ package com.example.readinesstrackerbackend.service;
 import com.example.readinesstrackerbackend.dto.IndustryDemandResult;
 import com.example.readinesstrackerbackend.entity.IndustrySkill;
 import com.example.readinesstrackerbackend.entity.Student;
+import com.example.readinesstrackerbackend.entity.StudentIndustryReadiness;
 import com.example.readinesstrackerbackend.repository.IndustrySkillRepository;
+import com.example.readinesstrackerbackend.repository.StudentIndustryReadinessRepository;
 import com.example.readinesstrackerbackend.repository.StudentRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -25,16 +29,23 @@ public class IndustryDemandService {
 
     private final StudentRepository studentRepository;
     private final IndustrySkillRepository industrySkillRepository;
+    private final StudentIndustryReadinessRepository studentIndustryReadinessRepository;
 
     public IndustryDemandService(StudentRepository studentRepository,
-                                 IndustrySkillRepository industrySkillRepository) {
+                                 IndustrySkillRepository industrySkillRepository,
+                                 StudentIndustryReadinessRepository studentIndustryReadinessRepository) {
         this.studentRepository = studentRepository;
         this.industrySkillRepository = industrySkillRepository;
+        this.studentIndustryReadinessRepository = studentIndustryReadinessRepository;
     }
 
     public IndustryDemandResult calculateMatch(Long studentId) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
+        return calculateAndSaveMatch(student);
+    }
+
+    public IndustryDemandResult calculateAndSaveMatch(Student student) {
         List<IndustrySkill> industrySkills = industrySkillRepository.findAllByOrderByWeightDesc();
         Set<String> studentSkills = parseStudentSkills(student.getSkills());
 
@@ -68,7 +79,29 @@ public class IndustryDemandService {
                 .map(IndustrySkill::getSkillName)
                 .collect(Collectors.toList());
 
-        return new IndustryDemandResult(studentId, score, matchedSkills, topMissingSkills);
+        // Save / Upsert directly to Supabase table: student_industry_readiness
+        persistReadiness(student.getId(), score, matchedSkills, topMissingSkills, industrySkills.size());
+
+        return new IndustryDemandResult(student.getId(), score, matchedSkills, topMissingSkills);
+    }
+
+    private void persistReadiness(Long studentId, double score, List<String> matchedSkills, List<String> missingSkills, int totalSkills) {
+        try {
+            StudentIndustryReadiness readiness = studentIndustryReadinessRepository
+                    .findByStudentId(studentId)
+                    .orElse(new StudentIndustryReadiness());
+
+            readiness.setStudentId(studentId);
+            readiness.setIndustryMatchScore(score);
+            readiness.setMatchedSkills(String.join(", ", matchedSkills));
+            readiness.setMissingSkills(String.join(", ", missingSkills));
+            readiness.setTotalIndustrySkills(totalSkills);
+            readiness.setLastUpdated(LocalDateTime.now());
+            studentIndustryReadinessRepository.save(readiness);
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(IndustryDemandService.class)
+                    .warn("Could not persist student_industry_readiness record: {}", e.getMessage());
+        }
     }
 
     private Set<String> parseStudentSkills(String skills) {

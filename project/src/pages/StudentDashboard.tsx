@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, LogOut, BarChart3, User, Trophy, Github, MessageSquare, BookOpen, Briefcase } from 'lucide-react';
-import { studentApi } from '../lib/backend-api';
+import { studentApi, moduleMarksApi, industryDemandApi } from '../lib/backend-api';
 import { type AnalysisResult } from '../components/AnalysisResults';
 import { OverviewTab } from '../components/dashboard/OverviewTab';
 import { ProfileTab } from '../components/dashboard/ProfileTab';
@@ -16,15 +16,23 @@ interface Student {
   id: number;
   name: string;
   email: string;
-  registrationNumber: string;
-  currentYear: string;
+  registrationNumber?: string;
+  currentYear?: string;
   skills?: string;
-  currentGpa: number;
+  currentGpa?: number;
   githubUsername?: string;
   linkedinUrl?: string;
   facebookUrl?: string;
-  createdAt: number;
+  createdAt?: number;
+  latestAiOverallScore?: number;
+  latestAiCodeQualityScore?: number;
+  latestAiArchitectureScore?: number;
+  latestAiDocumentationScore?: number;
+  latestAiTestingScore?: number;
+  latestAiStatus?: string;
+  aiAnalysisResultJson?: string;
 }
+
 export function StudentDashboard() {
   const [currentUser, setCurrentUser] = useState<Student | null>(null);
   const [allStudents, setAllStudents] = useState<Student[]>([]);
@@ -34,19 +42,57 @@ export function StudentDashboard() {
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [analysisError, setAnalysisError] = useState('');
+  const [moduleMarks, setModuleMarks] = useState<any>(null);
+  const [industryDemand, setIndustryDemand] = useState<any>(null);
+
   useEffect(() => {
     loadData();
   }, []);
+
   const loadData = async () => {
     try {
       setLoading(true);
 
       const userStr = localStorage.getItem('user');
       if (userStr) {
-        const user = JSON.parse(userStr);
+        let user = JSON.parse(userStr);
+        
+        // Refresh with latest data from database
+        try {
+          const freshUser = await studentApi.getStudentById(user.id);
+          if (freshUser) {
+            user = { ...user, ...freshUser };
+            localStorage.setItem('user', JSON.stringify(user));
+          }
+        } catch (e) {
+          console.warn('Could not refresh student profile from DB:', e);
+        }
+
         setCurrentUser(user);
 
+        // 1. Fetch GitHub Analysis from Database
         await fetchAnalysisResults(user.id, user.githubUsername);
+
+        // 2. Fetch Academic Module Marks & AI Specialization from Database
+        try {
+          const marks = await moduleMarksApi.getStudentMarks(user.id);
+          if (marks && marks.studentId) {
+            setModuleMarks(marks);
+          }
+        } catch (e) {
+          console.log('No module marks in DB yet:', e);
+        }
+
+        // 3. Fetch Industry Demand Match from Database
+        try {
+          const token = user.token || localStorage.getItem('token');
+          const demand = await industryDemandApi.getMatch(user.id, token);
+          if (demand) {
+            setIndustryDemand(demand);
+          }
+        } catch (e) {
+          console.log('No industry demand data in DB yet:', e);
+        }
       }
 
       const students = await studentApi.getAllStudents();
@@ -213,7 +259,16 @@ export function StudentDashboard() {
           ))}
         </div>
 
-        {activeTab === 'overview' && <OverviewTab currentUser={currentUser} allStudents={allStudents} />}
+        {activeTab === 'overview' && (
+          <OverviewTab
+            currentUser={currentUser}
+            allStudents={allStudents}
+            analysisResult={analysisResult}
+            moduleMarks={moduleMarks}
+            industryDemand={industryDemand}
+            onNavigateTab={(tab) => setActiveTab(tab)}
+          />
+        )}
         {activeTab === 'profile' && <ProfileTab currentUser={currentUser} />}
         {activeTab === 'students' && <AllStudentsTab allStudents={allStudents} />}
         {activeTab === 'github' && (
@@ -226,8 +281,8 @@ export function StudentDashboard() {
           />
         )}
         {activeTab === 'social' && <SocialMediaTab currentUser={currentUser} />}
-        {activeTab === 'modules' && <ModulesTab currentUser={currentUser} />}
-        {activeTab === 'industry' && <IndustryDemandTab />}
+        {activeTab === 'modules' && <ModulesTab currentUser={currentUser} initialData={moduleMarks} />}
+        {activeTab === 'industry' && <IndustryDemandTab initialData={industryDemand} />}
       </div>
     </div>
   );

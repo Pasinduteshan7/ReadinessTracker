@@ -1,7 +1,7 @@
 package com.example.readinesstrackerbackend.service;
 
 import com.example.readinesstrackerbackend.entity.BatchConfiguration;
-import com.example.readinesstrackerbackend.model.User;
+import com.example.readinesstrackerbackend.entity.Student;
 import com.example.readinesstrackerbackend.repository.BatchConfigurationRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ public class BatchRegistrationService {
      * When batch reaches target size, marks it as READY for analysis
      */
     @Transactional
-    public void recordStudentRegistration(User student) {
+    public void recordStudentRegistration(Student student) {
         try {
             Integer batchYear = student.getBatchYear();
             

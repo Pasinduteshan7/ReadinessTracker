@@ -29,7 +29,7 @@ public class ChallengeSubmission {
     private Long id;
     
     @Column(nullable = false)
-    private Long userId;
+    private Long studentId;
     
     @ManyToOne
     @JoinColumn(name = "challenge_id", nullable = false)

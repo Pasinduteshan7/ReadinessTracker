@@ -208,14 +208,16 @@ export function AdvisorDashboard() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              student.currentGpa >= 3.5
+                              student.currentGpa == null
+                                ? 'bg-slate-100 text-slate-700'
+                                : student.currentGpa >= 3.5
                                 ? 'bg-green-100 text-green-700'
                                 : student.currentGpa >= 3.0
                                 ? 'bg-blue-100 text-blue-700'
                                 : 'bg-yellow-100 text-yellow-700'
                             }`}
                           >
-                            {student.currentGpa.toFixed(2)}
+                            {student.currentGpa != null ? student.currentGpa.toFixed(2) : 'N/A'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

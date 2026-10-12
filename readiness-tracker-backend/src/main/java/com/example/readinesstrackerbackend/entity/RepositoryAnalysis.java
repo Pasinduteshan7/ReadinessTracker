@@ -18,8 +18,9 @@ public class RepositoryAnalysis {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(unique = true, nullable = false)
-    private String analysisId;
+    @ManyToOne
+    @JoinColumn(name = "analysis_job_id", nullable = false)
+    private AnalysisJob analysisJob;
     
     @Column
     private String githubUrl;
@@ -27,40 +28,41 @@ public class RepositoryAnalysis {
     @Column
     private String repositoryName;
     
-    @Column
-    private String repositoryOwner;
-    
-    @Enumerated(EnumType.STRING)
-    @Column
-    private ProjectScope projectScope;
+    @Column(columnDefinition = "TEXT")
+    private String description;
     
     @Column
-    private Double finalReadinessScore = 0.0;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private AnalysisStatus status = AnalysisStatus.PENDING;
+    private Integer stars;
     
     @Column
-    private Integer progress = 0;
+    private Integer forks;
     
-    @Column(length = 500)
-    private String currentStep;
+    @Column
+    private String languages;
     
-    @Column(length = 1000)
-    private String errorMessage;
+    @Column
+    private String tier;
+    
+    @Column
+    private Double overallScore;
+    
+    @Column
+    private Double codeQualityScore;
+    
+    @Column
+    private Double architectureScore;
+    
+    @Column
+    private Double documentationScore;
+    
+    @Column
+    private Double testingScore;
+    
+    @Column
+    private Double bestPracticesScore;
     
     @Column(columnDefinition = "TEXT")
-    private String modelScoresJson; // JSON serialized Map<String, Double>
-    
-    @Column(columnDefinition = "TEXT")
-    private String appliedWeightsJson; // JSON serialized Map<String, Double>
-    
-    @Column(columnDefinition = "TEXT")
-    private String analysisDetailsJson; // Full breakdown with all categories
-    
-    @Column(columnDefinition = "TEXT")
-    private String recommendationsJson; // JSON array of recommendations
+    private String qwenAnalysis;
     
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

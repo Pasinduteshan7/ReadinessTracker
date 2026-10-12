@@ -5,5 +5,5 @@ import org.springframework.stereotype.Repository;
 import com.example.readinesstrackerbackend.entity.GitHubProfile;
 @Repository
 public interface GitHubProfileRepository extends JpaRepository<GitHubProfile, Long> {
-    Optional<GitHubProfile> findByUserId(Long userId);
+    Optional<GitHubProfile> findByStudentId(Long studentId);
 }

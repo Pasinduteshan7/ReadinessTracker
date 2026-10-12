@@ -1,8 +1,9 @@
 import { useEffect, useState, type FC } from 'react';
 import { AlertCircle, Briefcase, CheckCircle2, Loader2 } from 'lucide-react';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface IndustryDemandTabProps {}
+export interface IndustryDemandTabProps {
+  initialData?: IndustryDemandResult | null;
+}
 
 interface IndustryDemandResult {
   studentId: number;
@@ -11,13 +12,20 @@ interface IndustryDemandResult {
   missingSkills: string[];
 }
 
-export const IndustryDemandTab: FC<IndustryDemandTabProps> = () => {
-  const [result, setResult] = useState<IndustryDemandResult | null>(null);
-  const [loading, setLoading] = useState(true);
+export const IndustryDemandTab: FC<IndustryDemandTabProps> = ({ initialData }) => {
+  const [result, setResult] = useState<IndustryDemandResult | null>(initialData || null);
+  const [loading, setLoading] = useState(initialData ? false : true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
+    // If initialData was already provided and we have results, don't re-buffer
+    if (initialData && initialData.studentId) {
+      setResult(initialData);
+      setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
 
     const loadIndustryDemand = async () => {
       setLoading(true);
@@ -41,16 +49,15 @@ export const IndustryDemandTab: FC<IndustryDemandTabProps> = () => {
         if (studentId === undefined || studentId === null || String(studentId).trim() === '') {
           throw new Error('Your student ID is missing. Please sign in again.');
         }
-        if (!token) {
-          throw new Error('Your authentication token is missing. Please sign in again.');
+
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
         }
 
         const response = await fetch(
           `http://localhost:8080/api/industry-demand/${encodeURIComponent(String(studentId))}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            signal: controller.signal,
-          },
+          { headers },
         );
 
         if (!response.ok) {
@@ -65,20 +72,29 @@ export const IndustryDemandTab: FC<IndustryDemandTabProps> = () => {
         }
 
         const data = await response.json() as IndustryDemandResult;
-        setResult(data);
+        if (isMounted) {
+          setResult(data);
+          setError(null);
+        }
       } catch (loadError) {
-        if (loadError instanceof Error && loadError.name === 'AbortError') return;
-        setError(loadError instanceof Error
-          ? loadError.message
-          : 'An unexpected error occurred while loading industry demand data.');
+        if (isMounted) {
+          setError(loadError instanceof Error
+            ? loadError.message
+            : 'An unexpected error occurred while loading industry demand data.');
+        }
       } finally {
-        if (!controller.signal.aborted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     void loadIndustryDemand();
-    return () => controller.abort();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [initialData]);
 
   const score = result?.industryMatchScore ?? 0;
   const boundedScore = Math.max(0, Math.min(100, score));
