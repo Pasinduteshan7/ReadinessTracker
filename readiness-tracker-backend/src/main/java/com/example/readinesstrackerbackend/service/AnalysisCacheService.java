@@ -8,16 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import com.example.readinesstrackerbackend.repository.StudentRepository;
-
 @Service
 public class AnalysisCacheService {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    private StudentRepository studentRepository;
 
     public Map<String, Object> getCachedAnalysis(String username, String repoName) {
         String sql = "SELECT * FROM analysis_cache WHERE username = ? AND repo_name = ?";

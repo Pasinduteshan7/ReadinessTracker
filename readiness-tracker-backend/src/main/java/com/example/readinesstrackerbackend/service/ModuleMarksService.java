@@ -1,9 +1,7 @@
 package com.example.readinesstrackerbackend.service;
 
-import com.example.readinesstrackerbackend.entity.Student;
 import com.example.readinesstrackerbackend.entity.StudentModuleMarks;
 import com.example.readinesstrackerbackend.repository.StudentModuleMarksRepository;
-import com.example.readinesstrackerbackend.repository.StudentRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +21,6 @@ import java.util.*;
 public class ModuleMarksService {
 
     private final StudentModuleMarksRepository moduleMarksRepository;
-    private final StudentRepository studentRepository;
     private final ObjectMapper objectMapper;
 
     // Field mapping: Database field name -> ML model feature name

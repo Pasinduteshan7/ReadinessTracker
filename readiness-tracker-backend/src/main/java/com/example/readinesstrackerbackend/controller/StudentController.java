@@ -25,9 +25,20 @@ public class StudentController {
     private JwtTokenProvider jwtTokenProvider;
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Student student) {
-        Student registered = studentService.register(student);
-        String token = jwtTokenProvider.generateToken(registered.getId(), registered.getEmail());
-        return ResponseEntity.ok(new LoginResponse(token, registered));
+        try {
+            Student registered = studentService.register(student);
+            String token = jwtTokenProvider.generateToken(registered.getId(), registered.getEmail());
+            return ResponseEntity.ok(new LoginResponse(token, registered));
+        } catch (IllegalArgumentException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        } catch (Exception e) {
+            log.error("Student registration failed: {}", e.getMessage(), e);
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage() != null ? e.getMessage() : "Registration failed");
+            return ResponseEntity.internalServerError().body(error);
+        }
     }
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
@@ -85,5 +96,57 @@ public class StudentController {
         response.put("latestAiStatus", student.getLatestAiStatus());
         response.put("aiAnalysisResultJson", student.getAiAnalysisResultJson());
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/github-token")
+    public ResponseEntity<?> saveGithubToken(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        try {
+            String token = body != null ? body.get("token") : null;
+            if (token == null || token.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Token cannot be empty"));
+            }
+            studentService.saveGithubToken(id, token.trim());
+            String preview = studentService.getMaskedGithubToken(id);
+            log.info("🔐 Encrypted and saved GitHub token for student ID: {}", id);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "GitHub token encrypted and saved securely",
+                    "hasGithubToken", true,
+                    "preview", preview != null ? preview : ""
+            ));
+        } catch (Exception e) {
+            log.error("Error saving GitHub token: ", e);
+            return ResponseEntity.status(500).body(Map.of("message", "Error saving GitHub token: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}/github-token")
+    public ResponseEntity<?> deleteGithubToken(@PathVariable Long id) {
+        try {
+            studentService.deleteGithubToken(id);
+            log.info("🗑️ Removed GitHub token for student ID: {}", id);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "GitHub token removed successfully",
+                    "hasGithubToken", false
+            ));
+        } catch (Exception e) {
+            log.error("Error removing GitHub token: ", e);
+            return ResponseEntity.status(500).body(Map.of("message", "Error removing GitHub token: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}/github-token/status")
+    public ResponseEntity<?> getGithubTokenStatus(@PathVariable Long id) {
+        Student student = studentService.getStudentById(id);
+        if (student == null) {
+            return ResponseEntity.status(404).body(Map.of("message", "Student not found"));
+        }
+        boolean hasToken = student.getHasGithubToken() != null && student.getHasGithubToken();
+        String preview = hasToken ? studentService.getMaskedGithubToken(id) : null;
+        return ResponseEntity.ok(Map.of(
+                "hasGithubToken", hasToken,
+                "preview", preview != null ? preview : ""
+        ));
     }
 }

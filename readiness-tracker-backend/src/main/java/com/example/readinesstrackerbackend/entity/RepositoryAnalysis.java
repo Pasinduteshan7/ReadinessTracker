@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
-import java.util.Map;
 
 @Entity
 @Table(name = "repository_analysis")
@@ -73,11 +72,17 @@ public class RepositoryAnalysis {
     
     @Column
     private LocalDateTime updatedAt;
-    
+
+    @Column(name = "analysisid")
+    private String analysisId;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (analysisId == null || analysisId.isBlank()) {
+            analysisId = java.util.UUID.randomUUID().toString();
+        }
     }
     
     @PreUpdate

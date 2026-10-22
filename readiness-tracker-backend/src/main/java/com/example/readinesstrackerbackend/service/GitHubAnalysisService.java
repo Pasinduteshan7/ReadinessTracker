@@ -65,8 +65,16 @@ public class GitHubAnalysisService {
         AnalysisJob savedJob = analysisJobRepository.save(job);
         log.info("Analysis job created with ID: {}", savedJob.getId());
 
-        if (request.getGithubToken() != null && !request.getGithubToken().isEmpty()) {
-            gitHubApiClient.setGitHubToken(request.getGithubToken());
+        String tokenToUse = request.getGithubToken();
+        if (tokenToUse == null || tokenToUse.isBlank()) {
+            tokenToUse = studentService.getDecryptedGithubToken(student.getId());
+            if (tokenToUse != null && !tokenToUse.isBlank()) {
+                log.info("🔐 Auto-loaded student's encrypted GitHub token from Supabase database");
+            }
+        }
+
+        if (tokenToUse != null && !tokenToUse.isEmpty()) {
+            gitHubApiClient.setGitHubToken(tokenToUse);
         }
         performAnalysisAsync(savedJob.getId());
         return savedJob;
@@ -264,6 +272,7 @@ public class GitHubAnalysisService {
                     repoAnalysis.setTestingScore(repoTestScore);
                     repoAnalysis.setBestPracticesScore(bestPractices);
                     repoAnalysis.setQwenAnalysis(summary);
+                    repoAnalysis.setAnalysisId(java.util.UUID.randomUUID().toString());
                     
                     job.getRepositories().add(repoAnalysis);
                 }
