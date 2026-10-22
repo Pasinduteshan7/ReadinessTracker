@@ -28,7 +28,7 @@ public class PythonBridgeService {
             request.put("user_id", username);
             request.put("max_repos", 10);
 
-            Map response = restTemplate.postForObject(url, request, Map.class);
+            Map<String, Object> response = restTemplate.postForObject(url, request, Map.class);
             return response;
         } catch (Exception e) {
             log.error("❌ Error in complete analysis: {}", e.getMessage());
@@ -40,7 +40,7 @@ public class PythonBridgeService {
             String url = applicationProperties.getAi().getEngine().getUrl() + "/analyze/fetch-repos";
             Map<String, String> request = Map.of("github_username", username);
             log.info("Fetching repos from Python engine: {}", url);
-            Map response = restTemplate.postForObject(url, request, Map.class);
+            Map<String, Object> response = restTemplate.postForObject(url, request, Map.class);
             return response;
         } catch (Exception e) {
             log.error("Error fetching repos: {}", e.getMessage());
@@ -51,7 +51,7 @@ public class PythonBridgeService {
         try {
             String url = applicationProperties.getAi().getEngine().getUrl() + "/analyze/quality";
             log.info("Analyzing quality from Python engine: {}", url);
-            Map response = restTemplate.postForObject(url, repoData, Map.class);
+            Map<String, Object> response = restTemplate.postForObject(url, repoData, Map.class);
             return response;
         } catch (Exception e) {
             log.error("Error analyzing quality: {}", e.getMessage());
@@ -62,7 +62,7 @@ public class PythonBridgeService {
         try {
             String url = applicationProperties.getAi().getEngine().getUrl() + "/analyze/ai-detection";
             log.info("Detecting AI patterns from Python engine: {}", url);
-            Map response = restTemplate.postForObject(url, repoData, Map.class);
+            Map<String, Object> response = restTemplate.postForObject(url, repoData, Map.class);
             return response;
         } catch (Exception e) {
             log.error("Error detecting AI patterns: {}", e.getMessage());
@@ -76,7 +76,7 @@ public class PythonBridgeService {
                     "&ai_penalty=" + aiPenalty + 
                     "&algorithm_score=" + algorithmScore;
             log.info("Calculating neural score from Python engine: {}", url);
-            Map response = restTemplate.getForObject(url, Map.class);
+            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
             return (Double) response.get("final_score");
         } catch (Exception e) {
             log.error("Error calculating neural score: {}", e.getMessage());
@@ -98,7 +98,7 @@ public class PythonBridgeService {
                 log.debug("📋 Sample repo structure: {}", allRepositories.get(0));
             }
 
-            Map response = restTemplate.postForObject(url, allRepositories, Map.class);
+            Map<String, Object> response = restTemplate.postForObject(url, allRepositories, Map.class);
             log.info("✅ Successfully selected best repositories from AI Engine");
             return response;
         } catch (Exception e) {
@@ -123,7 +123,7 @@ public class PythonBridgeService {
             request.put("github_token", githubToken != null ? githubToken : "");
             request.put("user_id", githubUsername);
             request.put("max_repos", Math.min(selectedRepositories.size(), 10));
-            Map response = analysisRestTemplate.postForObject(url, request, Map.class);
+            Map<String, Object> response = analysisRestTemplate.postForObject(url, request, Map.class);
             log.info("✅ Fine-tuned analysis completed successfully");
             return response;
         } catch (Exception e) {
@@ -158,7 +158,7 @@ public class PythonBridgeService {
             log.info("  → Step 1: Select best {} repos (Qwen)", limit);
             log.info("  → Step 2: Deep analysis on selected (CodeLlama + Qwen parallel)");
             log.info("  → Step 3: Neural network score combining");
-            Map response = restTemplate.postForObject(url, allRepositories, Map.class);
+            Map<String, Object> response = restTemplate.postForObject(url, allRepositories, Map.class);
             return response;
         } catch (Exception e) {
             log.error("Error in complete intelligent analysis: {}", e.getMessage());

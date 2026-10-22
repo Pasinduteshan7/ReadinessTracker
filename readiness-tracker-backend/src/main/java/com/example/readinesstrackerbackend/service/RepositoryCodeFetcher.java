@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 public class RepositoryCodeFetcher {
     
     private static final String GITHUB_RAW_BASE = "https://raw.githubusercontent.com";
-    private static final String GITHUB_API_BASE = "https://api.github.com";
     private static final long MAX_SIZE_BYTES = 500_000;  // 500KB total limit
     private static final int MAX_FILES = 15;  // Max 15 files
     private static final long MAX_FILE_SIZE = 50_000;  // 50KB per file
@@ -233,17 +232,5 @@ public class RepositoryCodeFetcher {
         }
         
         return files;
-    }
-    
-    /**
-     * Helper method to check if a file extension should be included
-     */
-    private boolean isIncludedExtension(String filePath) {
-        for (String ext : INCLUDE_EXTENSIONS) {
-            if (filePath.toLowerCase().endsWith(ext)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

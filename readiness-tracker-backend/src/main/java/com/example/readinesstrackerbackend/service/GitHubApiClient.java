@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -19,10 +20,12 @@ import lombok.extern.slf4j.Slf4j;
 public class GitHubApiClient {
     private static final String GITHUB_API_BASE = "https://api.github.com";
     private static final String REPOS_ENDPOINT = "/users/{username}/repos";
+    private static final ParameterizedTypeReference<List<Map<String, Object>>> LIST_TYPE_REF = new ParameterizedTypeReference<>() {};
+    private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE_REF = new ParameterizedTypeReference<>() {};
+
     @Value("${github.token:}")
     private String githubToken;
     private final RestTemplate restTemplate;
-    private final RepositoryCodeFetcher repositoryCodeFetcher;
     public void setGitHubToken(String token) {
         this.githubToken = token;
     }
@@ -71,8 +74,7 @@ public class GitHubApiClient {
                     }
                     HttpEntity<String> entity = new HttpEntity<>(headers);
 
-                    ResponseEntity<List> response = fetchWithRetry(url, entity, 3);
-                    @SuppressWarnings("unchecked")
+                    ResponseEntity<List<Map<String, Object>>> response = fetchWithRetry(url, entity, 3);
                     List<Map<String, Object>> pageRepos = response.getBody();
                     if (pageRepos == null || pageRepos.isEmpty()) {
                         log.info("✅ No more repositories found. Total fetched: {}", allRepos.size());
@@ -80,9 +82,7 @@ public class GitHubApiClient {
                     }
                     log.info("📦 Fetched {} repositories from page {}", pageRepos.size(), page);
 
-                    for (Object repoObj : pageRepos) {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> repo = (Map<String, Object>) repoObj;
+                    for (Map<String, Object> repo : pageRepos) {
 
                         String repoName = (String) repo.getOrDefault("name", "unknown");
                         
@@ -135,10 +135,10 @@ public class GitHubApiClient {
             throw new RuntimeException("Failed to fetch repositories from GitHub for user: " + username, e);
         }
     }
-    private ResponseEntity<List> fetchWithRetry(String url, HttpEntity<String> entity, int maxRetries) throws Exception {
+    private ResponseEntity<List<Map<String, Object>>> fetchWithRetry(String url, HttpEntity<String> entity, int maxRetries) throws Exception {
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                return restTemplate.exchange(url, HttpMethod.GET, entity, List.class);
+                return restTemplate.exchange(url, HttpMethod.GET, entity, LIST_TYPE_REF);
             } catch (Exception e) {
                 String errorMsg = e.getMessage().toLowerCase();
 
@@ -151,7 +151,7 @@ public class GitHubApiClient {
                         noAuthHeaders.set("Accept", "application/vnd.github.v3+json");
                         HttpEntity<String> noAuthEntity = new HttpEntity<>(noAuthHeaders);
                         try {
-                            return restTemplate.exchange(url, HttpMethod.GET, noAuthEntity, List.class);
+                            return restTemplate.exchange(url, HttpMethod.GET, noAuthEntity, LIST_TYPE_REF);
                         } catch (Exception unauthException) {
                             log.error("❌ Even unauthenticated request failed: {}", unauthException.getMessage());
                             throw unauthException;
@@ -201,10 +201,9 @@ public class GitHubApiClient {
 
             log.info("🔍 Validating GitHub token...");
             try {
-                ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+                ResponseEntity<Map<String, Object>> response = restTemplate.exchange(url, HttpMethod.GET, entity, MAP_TYPE_REF);
                 
-                if (response.getStatusCode().is2xxSuccessful()) {
-                    @SuppressWarnings("unchecked")
+                if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                     String login = (String) response.getBody().get("login");
                     log.info("✅ GitHub token is VALID for user: {}", login);
                     return new TokenValidationResult(true, "Token is valid for user: " + login);

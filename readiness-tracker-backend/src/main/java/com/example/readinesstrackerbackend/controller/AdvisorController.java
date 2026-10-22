@@ -6,12 +6,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import com.example.readinesstrackerbackend.entity.Student;
+import com.example.readinesstrackerbackend.service.StudentService;
+
 @RestController
 @RequestMapping("/api/advisors")
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 public class AdvisorController {
     @Autowired
     private AdvisorService advisorService;
+
+    @Autowired
+    private StudentService studentService;
+
     @PostMapping("/register")
     public ResponseEntity<Advisor> register(@RequestBody Advisor advisor) {
         return ResponseEntity.ok(advisorService.register(advisor));
@@ -36,4 +43,9 @@ public class AdvisorController {
         }
         return ResponseEntity.status(404).body("Advisor not found");
     }
+    @GetMapping("/{id}/students")
+    public ResponseEntity<List<Student>> getAssignedStudents(@PathVariable Long id) {
+        return ResponseEntity.ok(studentService.getStudentsByAdvisorId(id));
+    }
 }
+

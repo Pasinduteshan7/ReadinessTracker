@@ -30,8 +30,15 @@ public class Student {
     private String githubUsername;
     @Column(nullable = true, unique = true)
     private Long githubId;
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
     @Column(length = 1000)
     private String githubToken;
+
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    @Transient
+    public Boolean getHasGithubToken() {
+        return githubToken != null && !githubToken.isBlank();
+    }
     @Column(length = 500)
     private String avatarUrl;
     @Column
@@ -59,4 +66,9 @@ public class Student {
     private String latestAiStatus;
     @Column(name = "ai_analysis_result_json", columnDefinition = "TEXT")
     private String aiAnalysisResultJson;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "advisor_id")
+    private Advisor advisor;
 }
+

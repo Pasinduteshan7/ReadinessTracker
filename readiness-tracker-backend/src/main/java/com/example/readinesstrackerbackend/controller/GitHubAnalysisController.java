@@ -18,8 +18,6 @@ import com.example.readinesstrackerbackend.service.GitHubApiClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import java.time.LocalDateTime;
-import java.util.List;
 import org.springframework.web.bind.annotation.CrossOrigin;
 @RestController
 @RequestMapping("/api/github")
@@ -69,6 +67,11 @@ public class GitHubAnalysisController {
         try {
             log.info("Fetching analysis results for username: {} userId: {}", username, userId);
             AnalysisJob job = githubAnalysisService.getResultsByUsernameAndUserId(username, userId);
+            if (job != null && job.getStatus() == AnalysisJob.JobStatus.FAILED) {
+                log.warn("Analysis job failed for username: {} userId: {} error: {}", username, userId, job.getErrorMessage());
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                        .body(new ErrorResponse("Analysis failed: " + (job.getErrorMessage() != null ? job.getErrorMessage() : "Unknown error")));
+            }
             if (job == null || job.getResultsJson() == null || job.getResultsJson().isEmpty()) {
                 log.warn("No results found for username: {} userId: {}", username, userId);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
