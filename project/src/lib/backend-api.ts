@@ -8,7 +8,15 @@ export const studentApi = {
       credentials: 'include',
       body: JSON.stringify(studentData),
     });
-    if (!response.ok) throw new Error('Registration failed');
+    if (!response.ok) {
+      let errorMsg = 'Registration failed';
+      try {
+        const errJson = await response.json();
+        if (errJson?.message) errorMsg = errJson.message;
+        else if (errJson?.error) errorMsg = errJson.error;
+      } catch (_) {}
+      throw new Error(errorMsg);
+    }
     return response.json();
   },
   login: async (email: string, password: string) => {
@@ -40,6 +48,41 @@ export const studentApi = {
     });
     if (!response.ok) throw new Error('Failed to update student');
     return response.json();
+  },
+  saveGithubToken: async (studentId: number, token: string) => {
+    const response = await fetch(`${API_BASE}/students/${studentId}/github-token`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ token }),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to save GitHub token');
+    }
+    return response.json();
+  },
+  deleteGithubToken: async (studentId: number) => {
+    const response = await fetch(`${API_BASE}/students/${studentId}/github-token`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to remove GitHub token');
+    }
+    return response.json();
+  },
+  getGithubTokenStatus: async (studentId: number) => {
+    try {
+      const response = await fetch(`${API_BASE}/students/${studentId}/github-token/status`, {
+        credentials: 'include',
+      });
+      if (!response.ok) return { hasGithubToken: false, preview: '' };
+      return response.json();
+    } catch {
+      return { hasGithubToken: false, preview: '' };
+    }
   },
 };
 
@@ -217,3 +260,58 @@ export const industryDemandApi = {
     return response.json();
   },
 };
+
+export interface UnifiedReadinessStudent {
+  studentId: number;
+  studentName: string;
+  email: string;
+  registrationNumber?: string;
+  currentYear?: string;
+  batchYear?: number;
+  avatarUrl?: string;
+  currentGpa?: number;
+  overallScore: number;
+  rank: number;
+  percentile: number;
+  readinessTier: 'Industry Ready' | 'Nearly Ready' | 'Developing' | 'Foundational';
+  evaluatedPillarsCount: number;
+  academicScore?: number | null;
+  githubScore?: number | null;
+  industryScore?: number | null;
+  profileScore?: number | null;
+  topSpecialization?: string;
+  specializationConfidence?: number;
+  topCareerPath?: string;
+  topCareerMatch?: number;
+  primaryStrength?: string;
+  primaryGrowthArea?: string;
+}
+
+export interface CohortReadinessData {
+  rankedStudents: UnifiedReadinessStudent[];
+  studentReadiness?: UnifiedReadinessStudent | null;
+  totalCohortSize: number;
+  averageOverallScore: number;
+  averageAcademicScore: number;
+  averageGithubScore: number;
+  averageIndustryScore: number;
+  averageProfileScore: number;
+  topScore: number;
+}
+
+export const overallReadinessApi = {
+  getCohortReadiness: async (studentId?: number): Promise<CohortReadinessData> => {
+    const url = studentId
+      ? `${API_BASE}/overall-readiness/student/${studentId}`
+      : `${API_BASE}/overall-readiness/cohort`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch overall readiness cohort data');
+    return response.json();
+  },
+  compareStudents: async (studentId1: number, studentId2: number) => {
+    const response = await fetch(`${API_BASE}/overall-readiness/compare/${studentId1}/${studentId2}`);
+    if (!response.ok) throw new Error('Failed to compare students');
+    return response.json();
+  },
+};
+

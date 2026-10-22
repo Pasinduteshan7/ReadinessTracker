@@ -51,6 +51,11 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
   const handleStudentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    const studentEmailRegex = /^eg2[0-9]+@engug\.ruh\.ac\.lk$/i;
+    if (!studentEmailRegex.test(studentData.email.trim())) {
+      setError("Only official student emails matching 'eg2xxxx@engug.ruh.ac.lk' (e.g., eg245365@engug.ruh.ac.lk) are accepted.");
+      return;
+    }
     if (studentData.password !== studentData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -60,6 +65,7 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
       setError(passwordError);
       return;
     }
+
     setLoading(true);
     try {
       const response = await studentApi.register({
@@ -288,12 +294,14 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">University Email *</label>
                 <input
-                  type="text"
+                  type="email"
                   value={studentData.email}
                   onChange={(e) => setStudentData({ ...studentData, email: e.target.value })}
+                  placeholder="eg245365@engug.ruh.ac.lk"
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
+                <p className="text-xs text-slate-500 mt-1">Must be your official undergraduate email (e.g., eg24xxxx@engug.ruh.ac.lk)</p>
               </div>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>

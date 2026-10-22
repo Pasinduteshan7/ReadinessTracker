@@ -11,7 +11,10 @@ Approach:
 
 import re
 import numpy as np
-from sentence_transformers import SentenceTransformer
+try:
+    from sentence_transformers import SentenceTransformer
+except ImportError:
+    SentenceTransformer = None
 from app.data.job_categories import JOB_CATEGORIES
 
 
@@ -25,9 +28,15 @@ _CATEGORY_VECS = None
 
 def _get_model():
     global _MODEL
+    if SentenceTransformer is None:
+        return None
     if _MODEL is None:
-        print("🔄 Loading sentence-transformer model (first time ~5-10s)...")
-        _MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+        try:
+            print("🔄 Loading sentence-transformer model (first time ~5-10s)...")
+            _MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+        except Exception as e:
+            print(f"⚠️ Could not load SentenceTransformer: {e}")
+            _MODEL = None
     return _MODEL
 
 
@@ -36,6 +45,8 @@ def _get_category_vectors():
     global _CATEGORY_VECS
     if _CATEGORY_VECS is None:
         model = _get_model()
+        if model is None:
+            return None
         _CATEGORY_VECS = {}
         for cat, meta in JOB_CATEGORIES.items():
             vec = model.encode(meta["description"], normalize_embeddings=True)
@@ -137,17 +148,19 @@ def job_fit_scores(profile: dict) -> dict:
     No core skills → heavy penalty (halves the score).
     """
     model = _get_model()
-    cat_vecs = _get_category_vectors()
+    cat_vecs = _get_category_vectors() if model else None
 
     student_text = _build_student_text(profile)
-    student_vec = model.encode(student_text, normalize_embeddings=True)
+    student_vec = model.encode(student_text, normalize_embeddings=True) if model else None
 
     raw_scores = {}
-    for cat, cat_vec in cat_vecs.items():
+    for cat in JOB_CATEGORIES.keys():
         # 1. Semantic similarity
-        cos = float(np.dot(student_vec, cat_vec))
-        # Normalize: cos=0.15 → 0%, cos=0.65 → 100% (harder to reach 100)
-        semantic_pct = max(0.0, min(100.0, (cos - 0.15) / 0.50 * 100))
+        if cat_vecs and student_vec is not None and cat in cat_vecs:
+            cos = float(np.dot(student_vec, cat_vecs[cat]))
+            semantic_pct = max(0.0, min(100.0, (cos - 0.15) / 0.50 * 100))
+        else:
+            semantic_pct = 0.0
 
         # 2. Core-skill evidence
         direct, indirect = _count_core_matches(profile, cat)
@@ -157,10 +170,12 @@ def job_fit_scores(profile: dict) -> dict:
 
         # 3. Weighted combination
         if direct == 0 and indirect == 0:
-            # No evidence at all → cap the score very low
             final = semantic_pct * 0.20
         else:
-            final = 0.40 * semantic_pct + 0.60 * evidence_pct
+            if cat_vecs and student_vec is not None:
+                final = 0.40 * semantic_pct + 0.60 * evidence_pct
+            else:
+                final = evidence_pct
 
         # 4. Category weight adjustment (industry demand multiplier)
         final *= (0.85 + 0.15 * JOB_CATEGORIES[cat]["weight"])

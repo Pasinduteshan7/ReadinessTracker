@@ -6,13 +6,13 @@ interface Student {
   id: number;
   name: string;
   email: string;
-  registrationNumber: string;
-  currentYear: string;
+  registrationNumber?: string;
+  currentYear?: string;
   skills?: string;
-  currentGpa: number;
+  currentGpa?: number;
   githubUsername?: string;
   linkedinUrl?: string;
-  createdAt: number;
+  createdAt?: number;
 }
 
 interface ProfileTabProps {

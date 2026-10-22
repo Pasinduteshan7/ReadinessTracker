@@ -7,14 +7,22 @@ import json
 import re
 from pathlib import Path
 from dotenv import load_dotenv
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+    HAVE_GEMINI = True
+except ImportError:
+    genai = None
+    HAVE_GEMINI = False
 import time
 load_dotenv()
 
 # Configure Gemini
 _api_key = os.getenv("GEMINI_API_KEY")
-if _api_key:
-    genai.configure(api_key=_api_key)
+if _api_key and HAVE_GEMINI and genai:
+    try:
+        genai.configure(api_key=_api_key)
+    except Exception as e:
+        print(f"⚠️ Could not configure Gemini: {e}")
 
 _MODEL = None
 
@@ -186,7 +194,15 @@ def generate_recommendations(profile: dict, top_category: str) -> dict:
         entry_reqs=role.get("entry_level_requirements", ""),
     )
 
-    model = _get_model()
+    if not HAVE_GEMINI or not _api_key:
+        print("⚠️ Gemini API key not configured — using rule-based recommendations.")
+        return _rule_based_fallback(profile, top_category, role)
+
+    try:
+        model = _get_model()
+    except Exception as e:
+        print(f"⚠️ Could not initialize Gemini model ({e}) — using rule-based recommendations.")
+        return _rule_based_fallback(profile, top_category, role)
 
     # Retry up to 2 times on rate-limit / transient errors
     last_error = None

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, LogOut, Users, BarChart3, User, GraduationCap, Sparkles } from 'lucide-react';
+import { TrendingUp, LogOut, Users, BarChart3, User, GraduationCap, Sparkles, Trophy } from 'lucide-react';
 import { studentApi, moduleMarksApi } from '../lib/backend-api';
 import { AdvisorModuleMarksModal } from '../components/advisor/AdvisorModuleMarksModal';
+import { CohortLeaderboardView } from '../components/common/CohortLeaderboardView';
+import { getStudentBatch } from '../components/dashboard/OverviewTab';
 interface Advisor {
   id: number;
   name: string;
@@ -23,6 +25,7 @@ export function AdvisorDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
   const [marksMap, setMarksMap] = useState<Record<number, any>>({});
   const [selectedStudentForMarks, setSelectedStudentForMarks] = useState<Student | null>(null);
+  const [activeView, setActiveView] = useState<'leaderboard' | 'directory'>('leaderboard');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   useEffect(() => {
@@ -150,113 +153,157 @@ export function AdvisorDashboard() {
             <p className="text-slate-600">High Performers</p>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg border border-slate-200">
-          <div className="p-6 border-b border-slate-200">
-            <h3 className="text-xl font-bold text-slate-900">All Students</h3>
-            <p className="text-slate-600 text-sm mt-1">View all registered students</p>
-          </div>
-          {students.length === 0 ? (
-            <div className="text-center py-16">
-              <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-600 mb-2">No students found</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                      Registration #
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                      Year
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                      GPA
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                      AI Specialization
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-slate-200">
-                  {students.map((student) => {
-                    const studentMarks = marksMap[student.id];
-                    return (
-                      <tr key={student.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-medium text-slate-900">{student.name}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-slate-600 text-sm">
-                          {student.email}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                          {student.registrationNumber}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                          {student.currentYear}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              student.currentGpa == null
-                                ? 'bg-slate-100 text-slate-700'
-                                : student.currentGpa >= 3.5
-                                ? 'bg-green-100 text-green-700'
-                                : student.currentGpa >= 3.0
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-yellow-100 text-yellow-700'
-                            }`}
-                          >
-                            {student.currentGpa != null ? student.currentGpa.toFixed(2) : 'N/A'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {studentMarks && studentMarks.primarySpecialization ? (
-                            <div className="flex items-center gap-1.5">
-                              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1">
-                                <Sparkles className="w-3 h-3 text-indigo-500" />
-                                {studentMarks.primarySpecializationLabel || studentMarks.primarySpecialization}
-                              </span>
-                              {studentMarks.primaryConfidence && (
-                                <span className="text-[11px] text-slate-400 font-medium">
-                                  ({studentMarks.primaryConfidence.toFixed(0)}%)
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-slate-400 italic">
-                              Pending Marks
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedStudentForMarks(student)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors shadow-sm"
-                          >
-                            <GraduationCap className="w-4 h-4" />
-                            <span>Grade & Predict</span>
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+        {/* Navigation View Tabs */}
+        <div className="flex gap-4 border-b border-slate-200 mb-8 overflow-x-auto pb-4">
+          <button
+            type="button"
+            onClick={() => setActiveView('leaderboard')}
+            className={`px-5 py-2.5 font-bold whitespace-nowrap transition-all rounded-xl text-xs flex items-center gap-2 ${
+              activeView === 'leaderboard'
+                ? 'bg-green-600 text-white shadow-sm ring-2 ring-green-500/20'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 bg-white border border-slate-200'
+            }`}
+          >
+            <Trophy className="w-4 h-4" />
+            Batch Readiness & Peer Rankings
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveView('directory')}
+            className={`px-5 py-2.5 font-bold whitespace-nowrap transition-all rounded-xl text-xs flex items-center gap-2 ${
+              activeView === 'directory'
+                ? 'bg-green-600 text-white shadow-sm ring-2 ring-green-500/20'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 bg-white border border-slate-200'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            Student Directory & Academic Grading
+          </button>
         </div>
+
+        {/* View 1: Full Year-Wise Batch Readiness Leaderboard */}
+        {activeView === 'leaderboard' && (
+          <CohortLeaderboardView
+            role="advisor"
+            title="Advisor Batch & Year-Wise Readiness Rankings"
+            subtitle="Track employability metrics across all academic batches (1st Year, 2nd Year, 3rd Year, 4th Year), compare peer standings, and grade modules."
+            onGradeStudent={(st) => setSelectedStudentForMarks(st as any)}
+          />
+        )}
+
+        {/* View 2: Traditional Student Directory & Module Grading */}
+        {activeView === 'directory' && (
+          <div className="bg-white rounded-xl shadow-lg border border-slate-200">
+            <div className="p-6 border-b border-slate-200">
+              <h3 className="text-xl font-bold text-slate-900">All Students</h3>
+              <p className="text-slate-600 text-sm mt-1">View all registered students and input academic course marks.</p>
+            </div>
+            {students.length === 0 ? (
+              <div className="text-center py-16">
+                <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-600 mb-2">No students found</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                        Registration #
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                        Year / Batch
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                        GPA
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                        AI Specialization
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-slate-200">
+                    {students.map((student) => {
+                      const studentMarks = marksMap[student.id];
+                      const batchBadge = getStudentBatch(student, students);
+                      return (
+                        <tr key={student.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="font-medium text-slate-900">{student.name}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-slate-600 text-sm">
+                            {student.email}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-slate-600 font-mono text-xs">
+                            {student.registrationNumber}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="px-2 py-0.5 rounded text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                              {batchBadge}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                student.currentGpa == null
+                                  ? 'bg-slate-100 text-slate-700'
+                                  : student.currentGpa >= 3.5
+                                  ? 'bg-green-100 text-green-700'
+                                  : student.currentGpa >= 3.0
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : 'bg-yellow-100 text-yellow-700'
+                              }`}
+                            >
+                              {student.currentGpa != null ? student.currentGpa.toFixed(2) : 'N/A'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {studentMarks && studentMarks.primarySpecialization ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1">
+                                  <Sparkles className="w-3 h-3 text-indigo-500" />
+                                  {studentMarks.primarySpecializationLabel || studentMarks.primarySpecialization}
+                                </span>
+                                {studentMarks.primaryConfidence && (
+                                  <span className="text-[11px] text-slate-400 font-medium">
+                                    ({studentMarks.primaryConfidence.toFixed(0)}%)
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-slate-400 italic">
+                                Pending Marks
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedStudentForMarks(student)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors shadow-sm"
+                            >
+                              <GraduationCap className="w-4 h-4" />
+                              <span>Grade & Predict</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {selectedStudentForMarks && (
