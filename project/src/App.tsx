@@ -17,7 +17,14 @@ function AppContent() {
     if (user) {
       setCurrentPage('dashboard');
     } else if (!loading) {
-      setCurrentPage('landing');
+      const isExpired =
+        window.location.search.includes('session=expired') ||
+        Boolean(sessionStorage.getItem('auth_session_expired'));
+      if (isExpired) {
+        setCurrentPage('login');
+      } else {
+        setCurrentPage('landing');
+      }
     }
   }, [user, loading]);
 
