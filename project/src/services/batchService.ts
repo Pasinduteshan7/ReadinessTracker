@@ -126,6 +126,42 @@ class BatchService {
 
     return response.json();
   }
+
+  async getPromotePreview(): Promise<{
+    graduatingCount: number;
+    promotingToFourthYear: number;
+    promotingToThirdYear: number;
+    promotingToSecondYear: number;
+    totalActiveUndergrads: number;
+  }> {
+    const response = await fetch(`${API_BASE_URL}/admin/batch-config/promote-preview`, {
+      headers: this.getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch promotion preview');
+    return response.json();
+  }
+
+  async promoteAcademicYear(newFirstYearTarget: number = 200): Promise<{
+    message: string;
+    graduatedCount: number;
+    promotedToFourthYear: number;
+    promotedToThirdYear: number;
+    promotedToSecondYear: number;
+    newFirstYearTarget: number;
+  }> {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/batch-config/promote-academic-year?newFirstYearTarget=${newFirstYearTarget}`,
+      {
+        method: 'POST',
+        headers: this.getAuthHeaders()
+      }
+    );
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to promote academic year');
+    }
+    return response.json();
+  }
 }
 
 export const batchService = new BatchService();
