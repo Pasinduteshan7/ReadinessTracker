@@ -48,6 +48,10 @@ public class Student {
     private String linkedinUrl;
     @Column(nullable = true)
     private String facebookUrl;
+    @Column(name = "portfolio_url", length = 500, nullable = true)
+    private String portfolioUrl;
+    @Column(name = "coding_profile", length = 255, nullable = true)
+    private String codingProfile;
     @Column(nullable = true)
     private Integer batchYear;
     @Column(name = "created_at")

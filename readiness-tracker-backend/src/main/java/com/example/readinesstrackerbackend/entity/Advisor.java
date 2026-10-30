@@ -18,6 +18,7 @@ public class Advisor {
     private String email;
     @Column(nullable = false, unique = true)
     private String employeeId;
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String password;
     @Column(nullable = false)
