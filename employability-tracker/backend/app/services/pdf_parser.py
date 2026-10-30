@@ -4,12 +4,25 @@ Uses PyMuPDF (fast, handles most layouts) with pdfplumber as fallback.
 """
 
 import os
-import fitz  # PyMuPDF
-import pdfplumber
+
+try:
+    import pymupdf as fitz
+except ImportError:
+    try:
+        import fitz
+    except ImportError:
+        fitz = None
+
+try:
+    import pdfplumber
+except ImportError:
+    pdfplumber = None
 
 
 def extract_text_pymupdf(pdf_path: str) -> str:
     """Primary extractor — fast and reliable."""
+    if fitz is None:
+        return ""
     doc = fitz.open(pdf_path)
     pages = []
     for page_num, page in enumerate(doc):
@@ -21,6 +34,8 @@ def extract_text_pymupdf(pdf_path: str) -> str:
 
 def extract_text_pdfplumber(pdf_path: str) -> str:
     """Fallback extractor — better for table-heavy or unusual layouts."""
+    if pdfplumber is None:
+        return ""
     pages = []
     with pdfplumber.open(pdf_path) as pdf:
         for page_num, page in enumerate(pdf.pages):
@@ -39,12 +54,15 @@ def extract_text(pdf_path: str) -> str:
 
     text = extract_text_pymupdf(pdf_path)
 
-    # If PyMuPDF got very little text (scanned PDF?), try pdfplumber
-    if len(text.strip()) < 200:
+    # If PyMuPDF got very little text (scanned PDF?), try pdfplumber if available
+    if len(text.strip()) < 200 and pdfplumber is not None:
         print("⚠️  PyMuPDF extracted very little — trying pdfplumber...")
         text_alt = extract_text_pdfplumber(pdf_path)
         if len(text_alt.strip()) > len(text.strip()):
             text = text_alt
+
+    if not text.strip() and fitz is None:
+        raise RuntimeError("No PDF extractor available. Please install pymupdf (fitz).")
 
     return text
 

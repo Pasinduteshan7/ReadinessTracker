@@ -1,4 +1,5 @@
 package com.example.readinesstrackerbackend.controller;
+import com.example.readinesstrackerbackend.dto.ChangePasswordRequest;
 import com.example.readinesstrackerbackend.dto.LoginRequest;
 import com.example.readinesstrackerbackend.dto.LoginResponse;
 import com.example.readinesstrackerbackend.entity.Student;
@@ -148,5 +149,37 @@ public class StudentController {
                 "hasGithubToken", hasToken,
                 "preview", preview != null ? preview : ""
         ));
+    }
+
+    @PutMapping("/{id}/change-password")
+    public ResponseEntity<?> changePassword(@PathVariable Long id, @RequestBody ChangePasswordRequest request) {
+        try {
+            if (request == null || request.getCurrentPassword() == null || request.getNewPassword() == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Current password and new password are required"));
+            }
+            studentService.changePassword(id, request.getCurrentPassword(), request.getNewPassword());
+            return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to update password for student ID {}: ", id, e);
+            return ResponseEntity.status(500).body(Map.of("message", "Failed to update password: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteStudent(@PathVariable Long id) {
+        try {
+            studentService.deleteStudentCascade(id);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Student account deleted successfully"
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to delete student ID {}: ", id, e);
+            return ResponseEntity.status(500).body(Map.of("message", "Failed to delete student: " + e.getMessage()));
+        }
     }
 }

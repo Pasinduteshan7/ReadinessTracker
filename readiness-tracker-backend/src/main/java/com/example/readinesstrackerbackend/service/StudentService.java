@@ -11,13 +11,43 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import com.example.readinesstrackerbackend.util.EncryptionUtil;
 import java.util.Map;
+import com.example.readinesstrackerbackend.repository.AnalysisJobRepository;
+import com.example.readinesstrackerbackend.repository.FinalScoreRepository;
+import com.example.readinesstrackerbackend.repository.GitHubProfileRepository;
+import com.example.readinesstrackerbackend.repository.StudentIndustryReadinessRepository;
+import com.example.readinesstrackerbackend.repository.StudentModuleMarksRepository;
+import com.example.readinesstrackerbackend.repository.StudentProfileAnalysisRepository;
+import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class StudentService {
+    private static final Logger log = LoggerFactory.getLogger(StudentService.class);
+
     @Autowired
     private StudentRepository studentRepository;
 
     @Autowired
     private AdvisorRepository advisorRepository;
+
+    @Autowired
+    private AnalysisJobRepository analysisJobRepository;
+
+    @Autowired
+    private StudentIndustryReadinessRepository studentIndustryReadinessRepository;
+
+    @Autowired
+    private StudentModuleMarksRepository studentModuleMarksRepository;
+
+    @Autowired
+    private StudentProfileAnalysisRepository studentProfileAnalysisRepository;
+
+    @Autowired
+    private FinalScoreRepository finalScoreRepository;
+
+    @Autowired
+    private GitHubProfileRepository gitHubProfileRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -76,6 +106,12 @@ public class StudentService {
         if (student.getCurrentYear() == null || student.getCurrentYear().isBlank()) {
             student.setCurrentYear("1st Year");
         }
+        if (student.getBatchYear() == null && student.getCurrentYear() != null) {
+            if (student.getCurrentYear().contains("1")) student.setBatchYear(1);
+            else if (student.getCurrentYear().contains("2")) student.setBatchYear(2);
+            else if (student.getCurrentYear().contains("3")) student.setBatchYear(3);
+            else if (student.getCurrentYear().contains("4")) student.setBatchYear(4);
+        }
         // Encode password before saving
         student.setPassword(passwordEncoder.encode(student.getPassword()));
         return studentRepository.save(student);
@@ -125,6 +161,18 @@ public class StudentService {
                 student.setLinkedinUrl(updates.getLinkedinUrl());
             } else if (updates.getLinkedinUrl() != null) {
                 student.setLinkedinUrl(null);
+            }
+
+            if (updates.getPortfolioUrl() != null && !updates.getPortfolioUrl().isEmpty()) {
+                student.setPortfolioUrl(updates.getPortfolioUrl());
+            } else if (updates.getPortfolioUrl() != null) {
+                student.setPortfolioUrl(null);
+            }
+
+            if (updates.getCodingProfile() != null && !updates.getCodingProfile().isEmpty()) {
+                student.setCodingProfile(updates.getCodingProfile());
+            } else if (updates.getCodingProfile() != null) {
+                student.setCodingProfile(null);
             }
             
             if (updates.getCurrentYear() != null && !updates.getCurrentYear().isEmpty()) {
@@ -226,6 +274,77 @@ public class StudentService {
 
     public List<Student> getUnassignedStudents() {
         return studentRepository.findByAdvisorIsNull();
+    }
+
+    public void changePassword(Long studentId, String currentPassword, String newPassword) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found with ID: " + studentId));
+
+        if (currentPassword == null || currentPassword.isBlank()) {
+            throw new IllegalArgumentException("Current password is required.");
+        }
+
+        String stored = student.getPassword();
+        boolean matches = (stored != null && passwordEncoder.matches(currentPassword, stored))
+                || (stored != null && stored.equals(currentPassword));
+
+        if (!matches) {
+            throw new IllegalArgumentException("Current password does not match.");
+        }
+
+        if (newPassword == null || newPassword.length() < 8) {
+            throw new IllegalArgumentException("New password must be at least 8 characters.");
+        }
+
+        if (!newPassword.matches(".*[A-Z].*")) {
+            throw new IllegalArgumentException("New password must contain at least one uppercase letter (A-Z).");
+        }
+
+        if (!newPassword.matches(".*[0-9].*")) {
+            throw new IllegalArgumentException("New password must contain at least one number (0-9).");
+        }
+
+        student.setPassword(passwordEncoder.encode(newPassword));
+        studentRepository.save(student);
+    }
+
+    @Transactional
+    public void deleteStudentCascade(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found with ID: " + studentId));
+
+        log.info("🗑️ Starting cascade deletion for student ID: {} ({}, {})", studentId, student.getName(), student.getEmail());
+
+        // 1. Delete associated AnalysisJobs (cascading into RepositoryAnalysis rows)
+        List<com.example.readinesstrackerbackend.entity.AnalysisJob> jobs = analysisJobRepository.findByStudentId(studentId);
+        if (jobs != null && !jobs.isEmpty()) {
+            analysisJobRepository.deleteAll(jobs);
+            log.info("Deleted {} analysis jobs for student ID {}", jobs.size(), studentId);
+        }
+
+        // 2. Delete StudentIndustryReadiness record
+        studentIndustryReadinessRepository.findByStudentId(studentId)
+                .ifPresent(studentIndustryReadinessRepository::delete);
+
+        // 3. Delete StudentModuleMarks record
+        studentModuleMarksRepository.findByStudentId(studentId)
+                .ifPresent(studentModuleMarksRepository::delete);
+
+        // 4. Delete StudentProfileAnalysis record
+        studentProfileAnalysisRepository.findByStudentId(studentId)
+                .ifPresent(studentProfileAnalysisRepository::delete);
+
+        // 5. Delete FinalScore record
+        finalScoreRepository.findByStudentId(studentId)
+                .ifPresent(finalScoreRepository::delete);
+
+        // 6. Delete GitHubProfile record
+        gitHubProfileRepository.findByStudentId(studentId)
+                .ifPresent(gitHubProfileRepository::delete);
+
+        // 7. Delete the Student record itself
+        studentRepository.delete(student);
+        log.info("✅ Successfully deleted student ID: {}", studentId);
     }
 }
 

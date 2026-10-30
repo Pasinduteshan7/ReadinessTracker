@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { RefreshCw, AlertCircle, Plus } from 'lucide-react';
+import { RefreshCw, AlertCircle, Plus, RotateCcw } from 'lucide-react';
 import { BatchProgressCard } from './BatchProgressCard';
 import { BatchConfigModal } from './BatchConfigModal';
+import { PromoteAcademicYearModal } from './PromoteAcademicYearModal';
 
 interface BatchConfig {
   id: number;
@@ -42,6 +43,7 @@ export function BatchConfigurationPanel() {
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
 
   const fetchBatches = async () => {
     try {
@@ -142,6 +144,13 @@ export function BatchConfigurationPanel() {
         </div>
         <div className="flex gap-2">
           <button
+            onClick={() => setIsPromoteModalOpen(true)}
+            className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white px-4 py-2 rounded-lg transition-all font-medium shadow-sm hover:shadow"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Promote Academic Year
+          </button>
+          <button
             onClick={() => setIsConfigModalOpen(true)}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
           >
@@ -220,6 +229,13 @@ export function BatchConfigurationPanel() {
       <BatchConfigModal
         isOpen={isConfigModalOpen}
         onClose={() => setIsConfigModalOpen(false)}
+        onSuccess={fetchBatches}
+      />
+
+      {/* Academic Year Promotion Modal */}
+      <PromoteAcademicYearModal
+        isOpen={isPromoteModalOpen}
+        onClose={() => setIsPromoteModalOpen(false)}
         onSuccess={fetchBatches}
       />
     </div>

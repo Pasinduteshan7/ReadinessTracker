@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
+import { TrendingUp, Mail, Lock, AlertCircle, Loader2, ShieldAlert } from 'lucide-react';
 import { studentApi, advisorApi, adminApi } from '../lib/backend-api';
 interface LoginPageProps {
   onNavigate: (page: 'landing' | 'signup') => void;
@@ -12,6 +12,19 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionExpiredNotice] = useState<string | null>(() => {
+    try {
+      const stored = sessionStorage.getItem('auth_session_expired');
+      if (stored) {
+        sessionStorage.removeItem('auth_session_expired');
+        return stored;
+      }
+      if (typeof window !== 'undefined' && window.location.search.includes('session=expired')) {
+        return 'Your session has expired. Please sign in again.';
+      }
+    } catch {}
+    return null;
+  });
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -87,6 +100,15 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
             </div>
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {sessionExpiredNotice && (
+              <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg shadow-sm">
+                <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm">Session Expired</p>
+                  <p className="text-xs text-amber-800 mt-0.5">{sessionExpiredNotice}</p>
+                </div>
+              </div>
+            )}
             {error && (
               <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />

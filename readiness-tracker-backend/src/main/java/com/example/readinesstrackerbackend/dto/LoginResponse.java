@@ -1,5 +1,6 @@
 package com.example.readinesstrackerbackend.dto;
 
+import com.example.readinesstrackerbackend.entity.Advisor;
 import com.example.readinesstrackerbackend.entity.Student;
 
 public class LoginResponse {
@@ -14,6 +15,10 @@ public class LoginResponse {
     private Double currentGpa;
     private String githubUsername;
     private String linkedinUrl;
+    private String portfolioUrl;
+    private String codingProfile;
+    private Integer batchYear;
+    private Advisor advisor;
     private Long createdAt;
 
     public LoginResponse(String token, Student student) {
@@ -27,6 +32,10 @@ public class LoginResponse {
         this.currentGpa = student.getCurrentGpa();
         this.githubUsername = student.getGithubUsername();
         this.linkedinUrl = student.getLinkedinUrl();
+        this.portfolioUrl = student.getPortfolioUrl();
+        this.codingProfile = student.getCodingProfile();
+        this.batchYear = student.getBatchYear();
+        this.advisor = student.getAdvisor();
         this.createdAt = student.getCreatedAt();
     }
 
@@ -124,5 +133,37 @@ public class LoginResponse {
 
     public void setCreatedAt(Long createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getPortfolioUrl() {
+        return portfolioUrl;
+    }
+
+    public void setPortfolioUrl(String portfolioUrl) {
+        this.portfolioUrl = portfolioUrl;
+    }
+
+    public String getCodingProfile() {
+        return codingProfile;
+    }
+
+    public void setCodingProfile(String codingProfile) {
+        this.codingProfile = codingProfile;
+    }
+
+    public Integer getBatchYear() {
+        return batchYear;
+    }
+
+    public void setBatchYear(Integer batchYear) {
+        this.batchYear = batchYear;
+    }
+
+    public Advisor getAdvisor() {
+        return advisor;
+    }
+
+    public void setAdvisor(Advisor advisor) {
+        this.advisor = advisor;
     }
 }

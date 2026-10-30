@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, LogOut, BarChart3, User, Trophy, Github, MessageSquare, BookOpen, Briefcase } from 'lucide-react';
-import { studentApi, moduleMarksApi, industryDemandApi } from '../lib/backend-api';
+import { studentApi, moduleMarksApi, industryDemandApi, overallReadinessApi, type CohortReadinessData } from '../lib/backend-api';
 import { type AnalysisResult } from '../components/AnalysisResults';
 import { OverviewTab } from '../components/dashboard/OverviewTab';
 import { ProfileTab } from '../components/dashboard/ProfileTab';
@@ -44,6 +44,8 @@ export function StudentDashboard() {
   const [analysisError, setAnalysisError] = useState('');
   const [moduleMarks, setModuleMarks] = useState<any>(null);
   const [industryDemand, setIndustryDemand] = useState<any>(null);
+  const [profileAnalysis, setProfileAnalysis] = useState<any>(null);
+  const [cohortReadiness, setCohortReadiness] = useState<CohortReadinessData | null>(null);
 
   useEffect(() => {
     loadData();
@@ -93,6 +95,27 @@ export function StudentDashboard() {
         } catch (e) {
           console.log('No industry demand data in DB yet:', e);
         }
+
+        // 4. Fetch Social Media & Resume Analysis from Database
+        try {
+          const pRes = await fetch(`http://localhost:8080/api/profile-analysis/student/${user.id}`);
+          if (pRes.ok) {
+            const pData = await pRes.json();
+            setProfileAnalysis(pData);
+          }
+        } catch (e) {
+          console.log('No profile analysis in DB yet:', e);
+        }
+
+        // 5. Fetch Unified Employability Cohort Readiness
+        try {
+          const readiness = await overallReadinessApi.getCohortReadiness(user.id);
+          if (readiness) {
+            setCohortReadiness(readiness);
+          }
+        } catch (e) {
+          console.log('Unified readiness cohort API not reachable yet, client fallback will be used:', e);
+        }
       }
 
       const students = await studentApi.getAllStudents();
@@ -121,6 +144,8 @@ export function StudentDashboard() {
   const handleSignOut = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('githubToken');
+    sessionStorage.removeItem('githubToken');
     window.location.href = '/';
   };
   const handleAnalyzeGitHub = async (githubUsername: string) => {
@@ -133,8 +158,9 @@ export function StudentDashboard() {
         throw new Error('User ID not found. Current user: ' + JSON.stringify(currentUser));
       }
 
-      // Try to get token from localStorage (persistent) or sessionStorage (current session)
-      const savedToken = localStorage.getItem('githubToken') || sessionStorage.getItem('githubToken');
+      // Try to get token scoped to this user
+      const tokenKey = currentUser?.id ? `githubToken_${currentUser.id}` : 'githubToken';
+      const savedToken = localStorage.getItem(tokenKey) || sessionStorage.getItem(tokenKey) || '';
 
       const response = await fetch('http://localhost:8080/api/github/analyze', {
         method: 'POST',
@@ -157,7 +183,7 @@ export function StudentDashboard() {
 
       setAnalyzeLoading(true);
       let attempts = 0;
-      const maxAttempts = 40;
+      const maxAttempts = 80;
       const pollInterval = setInterval(async () => {
         attempts++;
         try {
@@ -172,7 +198,14 @@ export function StudentDashboard() {
               clearInterval(pollInterval);
               setAnalyzeLoading(false);
               alert('✅ Analysis completed successfully!');
+              return;
             }
+          } else if (resultsResponse.status === 422) {
+            const errData = await resultsResponse.json();
+            clearInterval(pollInterval);
+            setAnalyzeLoading(false);
+            setAnalysisError(errData.message || 'Analysis failed on server');
+            return;
           }
         } catch (err) {
           console.log('Still waiting for results...');
@@ -266,11 +299,14 @@ export function StudentDashboard() {
             analysisResult={analysisResult}
             moduleMarks={moduleMarks}
             industryDemand={industryDemand}
+            profileAnalysis={profileAnalysis}
+            cohortReadiness={cohortReadiness}
             onNavigateTab={(tab) => setActiveTab(tab)}
+            onRefreshCohort={loadData}
           />
         )}
         {activeTab === 'profile' && <ProfileTab currentUser={currentUser} />}
-        {activeTab === 'students' && <AllStudentsTab allStudents={allStudents} />}
+        {activeTab === 'students' && <AllStudentsTab allStudents={allStudents} currentUser={currentUser} />}
         {activeTab === 'github' && (
           <GitHubAnalysisTab
             currentUser={currentUser}

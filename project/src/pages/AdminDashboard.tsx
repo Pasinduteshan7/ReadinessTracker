@@ -7,6 +7,7 @@ import { GitHubAnalysisPanel } from '../components/admin/GitHubAnalysisPanel';
 import { SocialMediaPanel } from '../components/admin/SocialMediaPanel';
 import { ModulesPanel } from '../components/admin/ModulesPanel';
 import { IndustryDemandPanel } from '../components/admin/IndustryDemandPanel';
+import { CohortLeaderboardView } from '../components/common/CohortLeaderboardView';
 interface Admin {
   id: number;
   name: string;
@@ -26,7 +27,7 @@ export function AdminDashboard() {
     totalAdmins: 0,
     averageGPA: 0
   });
-  type AdminTab = 'overview' | 'github' | 'social' | 'modules' | 'industry';
+  type AdminTab = 'overview' | 'cohort' | 'github' | 'social' | 'modules' | 'industry';
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -123,6 +124,7 @@ export function AdminDashboard() {
         <div className="flex gap-4 border-b border-slate-200 mb-8 overflow-x-auto pb-4">
           {[
             { id: 'overview', label: 'Overview' },
+            { id: 'cohort', label: 'Batch & Cohort Rankings' },
             { id: 'github', label: 'GitHub Analysis' },
             { id: 'social', label: 'Social Media' },
             { id: 'modules', label: 'Modules' },
@@ -133,7 +135,7 @@ export function AdminDashboard() {
               onClick={() => setActiveTab(t.id as AdminTab)}
               className={`px-6 py-2 font-medium whitespace-nowrap transition-colors rounded-lg ${
                 activeTab === t.id
-                  ? 'bg-red-50 text-red-700'
+                  ? 'bg-red-50 text-red-700 font-bold shadow-sm'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
@@ -212,7 +214,25 @@ export function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Embedded Batch & Cohort Preview in Overview */}
+        <div className="mt-8">
+          <CohortLeaderboardView
+            role="admin"
+            title="Faculty Readiness & Batch Analytics"
+            subtitle="Explore student rankings across individual academic batches (1st Year, 2nd Year, 3rd Year, 4th Year) or across the full cohort."
+          />
+        </div>
           </>
+        )}
+
+        {/* Dedicated Cohort Rankings Tab */}
+        {activeTab === 'cohort' && (
+          <CohortLeaderboardView
+            role="admin"
+            title="Faculty Cohort & Year-Wise Readiness Rankings"
+            subtitle="Compare students across different academic study years, view batch averages, and analyze 4-pillar readiness distribution."
+          />
         )}
 
         {/* New Module Tabs */}

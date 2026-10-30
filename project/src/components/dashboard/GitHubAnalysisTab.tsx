@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Github, Zap, X, AlertCircle, CheckCircle, Code } from 'lucide-react';
+import { Github, Zap, X, AlertCircle, CheckCircle, Code, ShieldCheck, Trash2 } from 'lucide-react';
 import { AnalysisResults, type AnalysisResult } from '../AnalysisResults';
 import { AlgorithmChallengePage } from '../../pages/AlgorithmChallengePage';
+import { studentApi } from '../../lib/backend-api';
 
 type GitHubSubTab = 'analysis' | 'challenges';
 
@@ -42,15 +43,36 @@ export function GitHubAnalysisTab({
   const [tokenValidationError, setTokenValidationError] = useState('');
   const [savedToken, setSavedToken] = useState<string | null>(null);
 
-  // Load token from localStorage on component mount
+  // Load token status from Supabase database when currentUser changes
   useEffect(() => {
-    const storedToken = localStorage.getItem('githubToken');
-    if (storedToken) {
-      setSavedToken(storedToken);
-      setTokenStatus('valid');
-      setTokenValidationMessage('Token loaded from storage ✓');
+    if (!currentUser?.id) {
+      setSavedToken(null);
+      setTokenStatus('not-checked');
+      return;
     }
-  }, []);
+
+    let isMounted = true;
+    studentApi.getGithubTokenStatus(currentUser.id).then((status) => {
+      if (!isMounted) return;
+      if (status.hasGithubToken) {
+        setSavedToken(status.preview || 'ghp_****');
+        setTokenStatus('valid');
+        setTokenValidationMessage('Token encrypted & securely saved in database ✓');
+      } else {
+        setSavedToken(null);
+        setTokenStatus('not-checked');
+        setTokenValidationMessage('');
+      }
+    }).catch(() => {
+      if (isMounted) {
+        setSavedToken(null);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser?.id]);
 
   const validateToken = async (token: string) => {
     if (!token.trim()) {
@@ -87,6 +109,11 @@ export function GitHubAnalysisTab({
       return;
     }
 
+    if (!currentUser?.id) {
+      alert('Student session missing. Please log in again.');
+      return;
+    }
+
     // Validate token first
     await validateToken(githubToken);
     
@@ -96,14 +123,36 @@ export function GitHubAnalysisTab({
       return;
     }
 
-    // Save to both localStorage (persistent) and sessionStorage (for current session)
-    localStorage.setItem('githubToken', githubToken);
-    sessionStorage.setItem('githubToken', githubToken);
-    setSavedToken(githubToken);
-    setShowTokenModal(false);
-    setGithubToken('');
-    setTokenStatus('not-checked');
-    alert('✅ GitHub token saved successfully! (Will persist across browser sessions)');
+    try {
+      // Save to Supabase database (encrypted with AES-256 on backend)
+      const res = await studentApi.saveGithubToken(currentUser.id, githubToken.trim());
+      setSavedToken(res.preview || 'ghp_****');
+      setShowTokenModal(false);
+      setGithubToken('');
+      setTokenStatus('valid');
+      setTokenValidationMessage('Token encrypted & saved securely in database! 🔒');
+      alert('✅ GitHub token encrypted with AES-256 and saved in your Supabase database!');
+    } catch (err: any) {
+      alert('❌ Failed to save token: ' + (err.message || 'Unknown error'));
+    }
+  };
+
+  const handleDeleteGitHubToken = async () => {
+    if (!currentUser?.id) return;
+    if (!window.confirm('Are you sure you want to remove your saved GitHub token from the database?')) {
+      return;
+    }
+
+    try {
+      await studentApi.deleteGithubToken(currentUser.id);
+      setSavedToken(null);
+      setTokenStatus('not-checked');
+      setTokenValidationMessage('');
+      setShowTokenModal(false);
+      alert('🗑️ GitHub token removed from database.');
+    } catch (err: any) {
+      alert('❌ Failed to remove token: ' + (err.message || 'Unknown error'));
+    }
   };
 
   const handleTokenInputChange = (value: string) => {
@@ -115,12 +164,10 @@ export function GitHubAnalysisTab({
   };
 
   const handleAnalyzeGitHub = async (username: string) => {
-    // Use saved token or prompt for one
-    const token = savedToken || sessionStorage.getItem('githubToken') || localStorage.getItem('githubToken');
-    
-    if (!token) {
+    // If no token saved in database, warn the user
+    if (!savedToken) {
       const proceed = window.confirm(
-        '⚠️  No GitHub token configured. This will use the unauthenticated API (60 requests/hour limit) and may fail for large repositories.\n\nDo you want to continue anyway, or add a token first?'
+        '⚠️  No GitHub token saved in database. This will use unauthenticated requests (60/hour limit) which may fail for larger repositories.\n\nDo you want to continue anyway, or add a token first?'
       );
       if (!proceed) {
         setShowTokenModal(true);
@@ -128,7 +175,7 @@ export function GitHubAnalysisTab({
       }
     }
     
-    // Call the provided handler
+    // Call the provided handler (backend will auto-load and decrypt student's token)
     onAnalyzeGitHub(username);
   };
 
@@ -271,7 +318,7 @@ export function GitHubAnalysisTab({
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-slate-200 sticky top-0 bg-white">
               <h3 className="text-xl font-bold text-slate-900">
-                {sessionStorage.getItem('githubToken') ? 'Update' : 'Add'} GitHub Personal Access Token
+                {savedToken ? 'Update' : 'Add'} GitHub Personal Access Token
               </h3>
               <button
                 onClick={() => {
@@ -302,11 +349,33 @@ export function GitHubAnalysisTab({
                   <li>Copy the token immediately (you won't see it again!)</li>
                 </ol>
               </div>
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <p className="text-sm text-amber-900">
-                  <span className="font-semibold">⚠️ Important:</span> Your token is stored securely in your browser session only. It will not be sent to any external servers or stored permanently.
-                </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+                <ShieldCheck className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-900">
+                  <p className="font-semibold">🔒 AES-256 Encrypted Database Storage</p>
+                  <p className="mt-1">
+                    Your token is encrypted using AES-256-GCM before being saved in your Supabase student profile. 
+                    The server only decrypts it in memory to query GitHub's API during analysis.
+                  </p>
+                </div>
               </div>
+
+              {savedToken && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-emerald-900">Active Token on File</p>
+                    <p className="text-xs text-emerald-800 font-mono mt-0.5">Encrypted in Supabase ({savedToken})</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDeleteGitHubToken}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Remove Token
+                  </button>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-semibold text-slate-900 mb-2">
                   GitHub Personal Access Token
