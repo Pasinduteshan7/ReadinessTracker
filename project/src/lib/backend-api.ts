@@ -49,6 +49,17 @@ export const studentApi = {
     if (!response.ok) throw new Error('Failed to update student');
     return response.json();
   },
+  deleteStudent: async (id: number) => {
+    const response = await fetch(`${API_BASE}/students/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to delete student');
+    }
+    return response.json();
+  },
   saveGithubToken: async (studentId: number, token: string) => {
     const response = await fetch(`${API_BASE}/students/${studentId}/github-token`, {
       method: 'PUT',
@@ -83,6 +94,24 @@ export const studentApi = {
     } catch {
       return { hasGithubToken: false, preview: '' };
     }
+  },
+  changePassword: async (studentId: number, currentPassword: string, newPassword: string) => {
+    const response = await fetch(`${API_BASE}/students/${studentId}/change-password`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    if (!response.ok) {
+      let errorMsg = 'Failed to change password';
+      try {
+        const err = await response.json();
+        if (err?.message) errorMsg = err.message;
+        else if (err?.error) errorMsg = err.error;
+      } catch (_) {}
+      throw new Error(errorMsg);
+    }
+    return response.json();
   },
 };
 
@@ -148,6 +177,50 @@ export const adminApi = {
   getAdminById: async (id: number) => {
     const response = await fetch(`${API_BASE}/admins/${id}`);
     if (!response.ok) throw new Error('Failed to fetch admin');
+    return response.json();
+  },
+  assignAdvisor: async (advisorId: number, studentIds: number[]) => {
+    const response = await fetch(`${API_BASE}/admins/assignments/assign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ advisorId, studentIds }),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to assign advisor');
+    }
+    return response.json();
+  },
+  unassignAdvisor: async (studentIds: number[]) => {
+    const response = await fetch(`${API_BASE}/admins/assignments/unassign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ studentIds }),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to unassign advisor');
+    }
+    return response.json();
+  },
+  getAssignmentStats: async () => {
+    const response = await fetch(`${API_BASE}/admins/assignments/stats`, {
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to fetch assignment statistics');
+    return response.json();
+  },
+  deleteStudent: async (studentId: number) => {
+    const response = await fetch(`${API_BASE}/admins/students/${studentId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to delete student');
+    }
     return response.json();
   },
 };
