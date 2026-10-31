@@ -1,10 +1,5 @@
 package com.example.readinesstrackerbackend.demo;
 
-import com.example.readinesstrackerbackend.dto.RepositoryAnalysisRequestDTO;
-import com.example.readinesstrackerbackend.entity.RepositoryAnalysis;
-import com.example.readinesstrackerbackend.service.*;
-import java.util.Map;
-
 /**
  * Demo showing how the complete analysis flow works
  */

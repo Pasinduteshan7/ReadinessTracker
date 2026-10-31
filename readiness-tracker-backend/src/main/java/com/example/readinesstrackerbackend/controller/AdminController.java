@@ -117,5 +117,20 @@ public class AdminController {
 
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/students/{studentId}")
+    public ResponseEntity<?> deleteStudent(@PathVariable Long studentId) {
+        try {
+            studentService.deleteStudentCascade(studentId);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Student account and all associated records deleted successfully"
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("message", "Failed to delete student: " + e.getMessage()));
+        }
+    }
 }
 
