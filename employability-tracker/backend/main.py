@@ -2,6 +2,14 @@
 FastAPI backend — serves employability analysis API.
 Run with: uvicorn main:app --reload
 """
+import sys
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -49,7 +57,7 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 @app.on_event("startup")
 def on_startup():
     init_db()
-    print("✅ Database ready.")
+    print("[OK] Database ready.")
 
 
 # ============================================================
