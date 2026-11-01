@@ -23,6 +23,15 @@ interface Student {
   githubUsername?: string;
   linkedinUrl?: string;
   facebookUrl?: string;
+  portfolioUrl?: string;
+  codingProfile?: string;
+  batchYear?: number;
+  advisor?: {
+    id: number;
+    name: string;
+    email: string;
+    department?: string;
+  } | null;
   createdAt?: number;
   latestAiOverallScore?: number;
   latestAiCodeQualityScore?: number;
@@ -305,7 +314,12 @@ export function StudentDashboard() {
             onRefreshCohort={loadData}
           />
         )}
-        {activeTab === 'profile' && <ProfileTab currentUser={currentUser} />}
+        {activeTab === 'profile' && (
+          <ProfileTab
+            currentUser={currentUser}
+            onUserUpdated={(updatedUser) => setCurrentUser(prev => prev ? { ...prev, ...updatedUser } : updatedUser)}
+          />
+        )}
         {activeTab === 'students' && <AllStudentsTab allStudents={allStudents} currentUser={currentUser} />}
         {activeTab === 'github' && (
           <GitHubAnalysisTab
