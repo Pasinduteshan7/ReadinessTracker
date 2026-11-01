@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, LogOut, Users, Award } from 'lucide-react';
 import { studentApi, advisorApi, adminApi } from '../lib/backend-api';
-import { BatchConfigurationPanel } from '../components/admin/BatchConfigurationPanel';
-import { BenchmarkPanel } from '../components/admin/BenchmarkPanel';
 import { GitHubAnalysisPanel } from '../components/admin/GitHubAnalysisPanel';
-import { SocialMediaPanel } from '../components/admin/SocialMediaPanel';
-import { ModulesPanel } from '../components/admin/ModulesPanel';
-import { IndustryDemandPanel } from '../components/admin/IndustryDemandPanel';
 import { CohortLeaderboardView } from '../components/common/CohortLeaderboardView';
+import { AdvisorAssignmentPanel } from '../components/admin/AdvisorAssignmentPanel';
+import { AdminStudentManagementPanel } from '../components/admin/AdminStudentManagementPanel';
 interface Admin {
   id: number;
   name: string;
@@ -27,7 +24,7 @@ export function AdminDashboard() {
     totalAdmins: 0,
     averageGPA: 0
   });
-  type AdminTab = 'overview' | 'cohort' | 'github' | 'social' | 'modules' | 'industry';
+  type AdminTab = 'overview' | 'students' | 'cohort' | 'advisors' | 'github';
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -124,11 +121,10 @@ export function AdminDashboard() {
         <div className="flex gap-4 border-b border-slate-200 mb-8 overflow-x-auto pb-4">
           {[
             { id: 'overview', label: 'Overview' },
+            { id: 'students', label: 'Student Directory' },
             { id: 'cohort', label: 'Batch & Cohort Rankings' },
+            { id: 'advisors', label: 'Advisor Allocation' },
             { id: 'github', label: 'GitHub Analysis' },
-            { id: 'social', label: 'Social Media' },
-            { id: 'modules', label: 'Modules' },
-            { id: 'industry', label: 'Industry Demand' },
           ].map((t) => (
             <button
               key={t.id}
@@ -226,6 +222,11 @@ export function AdminDashboard() {
           </>
         )}
 
+        {/* Student Directory Tab */}
+        {activeTab === 'students' && (
+          <AdminStudentManagementPanel onStudentDeleted={loadData} />
+        )}
+
         {/* Dedicated Cohort Rankings Tab */}
         {activeTab === 'cohort' && (
           <CohortLeaderboardView
@@ -235,11 +236,11 @@ export function AdminDashboard() {
           />
         )}
 
-        {/* New Module Tabs */}
+        {/* Advisor Allocation Tab */}
+        {activeTab === 'advisors' && <AdvisorAssignmentPanel />}
+
+        {/* GitHub Analysis Module Tab */}
         {activeTab === 'github' && <GitHubAnalysisPanel />}
-        {activeTab === 'social' && <SocialMediaPanel />}
-        {activeTab === 'modules' && <ModulesPanel />}
-        {activeTab === 'industry' && <IndustryDemandPanel />}
       </div>
     </div>
   );

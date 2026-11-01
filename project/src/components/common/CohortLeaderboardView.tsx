@@ -10,7 +10,10 @@ import {
   X,
   ArrowRight,
   TrendingUp,
-  Award
+  Award,
+  Trash2,
+  AlertTriangle,
+  CheckCircle2
 } from 'lucide-react';
 import {
   RadarChart,
@@ -25,6 +28,7 @@ import {
 import {
   overallReadinessApi,
   studentApi,
+  adminApi,
   UnifiedReadinessStudent,
   CohortReadinessData
 } from '../../lib/backend-api';
@@ -64,6 +68,45 @@ export function CohortLeaderboardView({
   const [selectedBatch, setSelectedBatch] = useState<string>('ALL'); // 'ALL' or specific batch like '3rd Year'
   const [compareStudentA, setCompareStudentA] = useState<UnifiedReadinessStudent | null>(null);
   const [compareStudentB, setCompareStudentB] = useState<UnifiedReadinessStudent | null>(null);
+
+  // Admin delete student state
+  const [studentToDelete, setStudentToDelete] = useState<{
+    id: number;
+    name: string;
+    email: string;
+    registrationNumber?: string;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteSuccess, setDeleteSuccess] = useState('');
+
+  const handleConfirmDelete = async () => {
+    if (!studentToDelete) return;
+    try {
+      setIsDeleting(true);
+      setDeleteError('');
+      await adminApi.deleteStudent(studentToDelete.id);
+
+      // Optimistically update states
+      setAllStudents((prev) => prev.filter((s) => s.id !== studentToDelete.id));
+      setCohortData((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          rankedStudents: prev.rankedStudents.filter((s) => s.studentId !== studentToDelete.id),
+          totalStudents: Math.max(0, prev.totalStudents - 1)
+        };
+      });
+
+      setDeleteSuccess(`Student "${studentToDelete.name}" successfully deleted.`);
+      setStudentToDelete(null);
+      setTimeout(() => setDeleteSuccess(''), 4000);
+    } catch (err: any) {
+      setDeleteError(err.message || 'Failed to delete student account');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -241,6 +284,13 @@ export function CohortLeaderboardView({
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
           {error}
+        </div>
+      )}
+
+      {deleteSuccess && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-sm font-semibold flex items-center gap-2 animate-fadeIn shadow-sm">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+          <span>{deleteSuccess}</span>
         </div>
       )}
 
@@ -521,6 +571,24 @@ export function CohortLeaderboardView({
                           >
                             Compare
                           </button>
+
+                          {/* Admin Delete Action */}
+                          {role === 'admin' && (
+                            <button
+                              type="button"
+                              title="Delete Student Account"
+                              onClick={() => setStudentToDelete({
+                                id: student.studentId,
+                                name: student.studentName,
+                                email: student.email,
+                                registrationNumber: student.registrationNumber
+                              })}
+                              className="px-2 py-1 rounded-lg text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 transition-colors flex items-center gap-1 shadow-sm"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">Delete</span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -658,6 +726,73 @@ export function CohortLeaderboardView({
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal for Admin */}
+      {studentToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-scaleUp">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Delete Student Account</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Permanently delete this student account along with all GitHub evaluations, academic module marks, and readiness scores.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1 text-xs">
+              <p className="font-semibold text-slate-900">{studentToDelete.name}</p>
+              <p className="text-slate-600 font-mono">{studentToDelete.email}</p>
+              {studentToDelete.registrationNumber && (
+                <p className="text-slate-500">
+                  Reg: <span className="font-mono font-medium text-slate-700">{studentToDelete.registrationNumber}</span>
+                </p>
+              )}
+            </div>
+
+            {deleteError && (
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-medium">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => {
+                  setStudentToDelete(null);
+                  setDeleteError('');
+                }}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Confirm Delete</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Github, Zap, X, AlertCircle, CheckCircle, Code, ShieldCheck, Trash2 } from 'lucide-react';
+import { Github, Zap, X, AlertCircle, CheckCircle, ShieldCheck, Trash2 } from 'lucide-react';
 import { AnalysisResults, type AnalysisResult } from '../AnalysisResults';
-import { AlgorithmChallengePage } from '../../pages/AlgorithmChallengePage';
 import { studentApi } from '../../lib/backend-api';
-
-type GitHubSubTab = 'analysis' | 'challenges';
 
 interface Student {
   id: number;
@@ -34,8 +31,6 @@ export function GitHubAnalysisTab({
   analysisError,
   onAnalyzeGitHub
 }: GitHubAnalysisTabProps) {
-  const [githubSubTab, setGithubSubTab] = useState<GitHubSubTab>('analysis');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('easy');
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [githubToken, setGithubToken] = useState('');
   const [tokenStatus, setTokenStatus] = useState<'valid' | 'invalid' | 'not-checked' | 'checking'>('not-checked');
@@ -181,137 +176,77 @@ export function GitHubAnalysisTab({
 
   return (
     <div>
-      <div className="mb-6 flex gap-4 border-b border-slate-200 pb-4">
-        <button
-          onClick={() => setGithubSubTab('analysis')}
-          className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
-            githubSubTab === 'analysis' ? 'text-blue-600 border-b-2 border-blue-600 -mb-4' : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <Github className="w-4 h-4" />
-          Repository Analysis
-        </button>
-        <button
-          onClick={() => setGithubSubTab('challenges')}
-          className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
-            githubSubTab === 'challenges' ? 'text-blue-600 border-b-2 border-blue-600 -mb-4' : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <Code className="w-4 h-4" />
-          Algorithm Challenges
-        </button>
-      </div>
-
-      {githubSubTab === 'analysis' ? (
-        <div>
-          <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <Github className="w-8 h-8 text-slate-900" />
-                <h2 className="text-2xl font-bold text-slate-900">GitHub Analysis</h2>
-              </div>
-              <div className="flex items-center gap-4">
-                {savedToken ? (
-                  <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    <span className="text-sm font-medium text-green-700">Token Saved ✓</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-                    <AlertCircle className="w-5 h-5 text-amber-600" />
-                    <span className="text-sm font-medium text-amber-700">No Token</span>
-                  </div>
-                )}
-                <button
-                  onClick={() => setShowTokenModal(true)}
-                  className="text-sm font-medium px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
-                >
-                  {savedToken ? 'Update Token' : 'Add Token'}
-                </button>
-              </div>
-            </div>
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-6 border border-slate-200">
-                <p className="text-sm text-slate-600 mb-2">GitHub Username</p>
-                <p className="text-xl font-semibold text-slate-900 mb-4">{currentUser?.githubUsername || 'Not connected'}</p>
-                {currentUser?.githubUsername && (
-                  <a
-                    href={`https://github.com/${currentUser.githubUsername}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    View Profile →
-                  </a>
-                )}
-              </div>
-              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-6 border border-slate-200">
-                <p className="text-sm text-slate-600 mb-2">Developer Readiness</p>
-                <p className="text-xl font-semibold text-slate-900 mb-4">
-                  {analysisResult ? `${analysisResult.overallScore.toFixed(1)}%` : 'Not analyzed yet'}
-                </p>
-                <p className="text-xs text-slate-600">Based on repository analysis</p>
-              </div>
-            </div>
-            <div className="flex gap-4 flex-wrap">
-              {currentUser?.githubUsername ? (
-                <>
-                  <button
-                    onClick={() => currentUser.githubUsername && handleAnalyzeGitHub(currentUser.githubUsername)}
-                    disabled={analyzeLoading}
-                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
-                  >
-                    <Zap className="w-5 h-5" />
-                    {analyzeLoading ? 'Analyzing...' : 'Analyze Repository'}
-                  </button>
-                </>
-              ) : (
-                <p className="text-slate-600">Please connect your GitHub account to analyze repositories</p>
-              )}
-            </div>
+      <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Github className="w-8 h-8 text-slate-900" />
+            <h2 className="text-2xl font-bold text-slate-900">GitHub Analysis</h2>
           </div>
-          <AnalysisResults 
-            result={analysisResult} 
-            loading={analyzeLoading}
-            error={analysisError}
-          />
+          <div className="flex items-center gap-4">
+            {savedToken ? (
+              <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span className="text-sm font-medium text-green-700">Token Saved ✓</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-amber-600" />
+                <span className="text-sm font-medium text-amber-700">No Token</span>
+              </div>
+            )}
+            <button
+              onClick={() => setShowTokenModal(true)}
+              className="text-sm font-medium px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+            >
+              {savedToken ? 'Update Token' : 'Add Token'}
+            </button>
+          </div>
         </div>
-      ) : (
-        <div>
-          <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">Algorithm Challenges</h2>
-            <p className="text-slate-600 mb-6">Solve coding challenges at different difficulty levels. Each challenge is unique to you to prevent plagiarism.</p>
-            
-            <div className="mb-6 space-y-4">
-              <label className="block">
-                <span className="text-sm font-semibold text-slate-900 mb-2 block">Select Difficulty Level</span>
-                <div className="flex gap-3">
-                  {['easy', 'medium', 'hard'].map((level) => (
-                    <button
-                      key={level}
-                      onClick={() => setSelectedDifficulty(level)}
-                      className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                        selectedDifficulty === level 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
-                    >
-                      {level.charAt(0).toUpperCase() + level.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </label>
-            </div>
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-6 border border-slate-200">
+            <p className="text-sm text-slate-600 mb-2">GitHub Username</p>
+            <p className="text-xl font-semibold text-slate-900 mb-4">{currentUser?.githubUsername || 'Not connected'}</p>
+            {currentUser?.githubUsername && (
+              <a
+                href={`https://github.com/${currentUser.githubUsername}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
+                View Profile →
+              </a>
+            )}
           </div>
-
-          {currentUser && (
-            <AlgorithmChallengePage 
-              userId={currentUser.id.toString()}
-              difficulty={selectedDifficulty}
-            />
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-6 border border-slate-200">
+            <p className="text-sm text-slate-600 mb-2">Developer Readiness</p>
+            <p className="text-xl font-semibold text-slate-900 mb-4">
+              {analysisResult ? `${analysisResult.overallScore.toFixed(1)}%` : 'Not analyzed yet'}
+            </p>
+            <p className="text-xs text-slate-600">Based on repository analysis</p>
+          </div>
+        </div>
+        <div className="flex gap-4 flex-wrap">
+          {currentUser?.githubUsername ? (
+            <>
+              <button
+                onClick={() => currentUser.githubUsername && handleAnalyzeGitHub(currentUser.githubUsername)}
+                disabled={analyzeLoading}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
+              >
+                <Zap className="w-5 h-5" />
+                {analyzeLoading ? 'Analyzing...' : 'Analyze Repository'}
+              </button>
+            </>
+          ) : (
+            <p className="text-slate-600">Please connect your GitHub account to analyze repositories</p>
           )}
         </div>
-      )}
+      </div>
+      <AnalysisResults 
+        result={analysisResult} 
+        loading={analyzeLoading}
+        error={analysisError}
+      />
 
       {showTokenModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
